@@ -1,7 +1,6 @@
 import typing
 
 from BaseClasses import CollectionState, Region, Location
-from .Logic import can_heli, can_swingshot
 from .data import Planets
 from .data import Items
 from .data.Planets import PlanetData
