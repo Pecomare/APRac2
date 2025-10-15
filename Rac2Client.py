@@ -7,6 +7,7 @@ import multiprocessing
 import os
 import subprocess
 import traceback
+import socket
 
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, logger, server_loop, gui_enabled
 from NetUtils import ClientStatus
@@ -20,6 +21,44 @@ from .Callbacks import update, init
 from .ClientReceiveItems import handle_received_items
 from .NotificationManager import NotificationManager
 from .Rac2Interface import HUD_MESSAGE_DURATION, ConnectionState, Rac2Interface, Rac2Planet
+from configparser import ConfigParser
+from .Rac2Interface import create_pine_interface, Rac2Interface
+
+
+def find_free_port(start=28021, end=28031):
+    for port in range(start, end + 1):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.bind(("127.0.0.1", port))
+                return port
+            except OSError:
+                continue
+    return 28011
+
+def set_pine_port(ini_path, port):
+    config = ConfigParser()
+    config.read(ini_path)
+    if 'EmuCore' in config and 'PINESlot' in config['EmuCore']:
+        config['EmuCore']['PINESlot'] = str(port)
+        with open(ini_path, 'w') as f:
+            config.write(f)
+
+def setup_pine():
+    """Determine port and create Pine instance early"""
+    host_settings = get_settings()
+    game_ini = host_settings.get('rac2_options', {}).get('game_ini')
+
+    if game_ini and os.path.exists(game_ini):
+        port = find_free_port()
+        set_pine_port(game_ini, port)
+    else:
+        port = 28011
+
+    create_pine_interface(port)
+    return port
+
+# Run early so Pine instance exists for Rac2Interface
+pine_port = setup_pine()
 
 
 class Rac2CommandProcessor(ClientCommandProcessor):
@@ -293,7 +332,6 @@ def get_pcsx2_crc(iso_path: str) -> Optional[int]:
             crc ^= int.from_bytes(iso_file.read(4), "little")
 
     return crc
-
 
 def launch():
     Utils.init_logging("RAC2 Client")
