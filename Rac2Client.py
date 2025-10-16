@@ -36,15 +36,15 @@ def find_free_port(start=28021, end=28031):
     return 28011  # fallback default
 
 def ensure_pine_settings(ini_path: str, port: int = 28011):
-    """Ensure INI has [EmuCore] and [Achievements] configured for Pine"""
+    """Ensure INI has configuration for PINE."""
     config = ConfigParser()
-    config.optionxform = str  # preserve key case
+    config.optionxform = str  # Preserve key case exactly
 
     ini_dir = os.path.dirname(ini_path)
     if not os.path.exists(ini_dir):
         os.makedirs(ini_dir, exist_ok=True)
 
-    # Create a minimal INI file if it doesn't exist but the directory is valid
+    # Create minimal INI if missing
     if not os.path.exists(ini_path):
         with open(ini_path, 'w') as f:
             f.write("[EmuCore]\n")
@@ -54,20 +54,31 @@ def ensure_pine_settings(ini_path: str, port: int = 28011):
     # --- EmuCore section ---
     if 'EmuCore' not in config:
         config['EmuCore'] = {}
+    # Normalize capitalization
+    for key in list(config['EmuCore'].keys()):
+        if key.lower() == 'enablepine' and key != 'EnablePINE':
+            config['EmuCore']['EnablePINE'] = config['EmuCore'].pop(key)
+        elif key.lower() == 'pineslot' and key != 'PINESlot':
+            config['EmuCore']['PINESlot'] = config['EmuCore'].pop(key)
+    # Ensure required settings exist and are correct
     config['EmuCore']['EnablePINE'] = 'true'
     config['EmuCore']['PINESlot'] = str(port)
 
     # --- Achievements section ---
     if 'Achievements' not in config:
         config['Achievements'] = {}
+    # Normalize capitalization
+    for key in list(config['Achievements'].keys()):
+        if key.lower() == 'enabled' and key != 'Enabled':
+            config['Achievements']['Enabled'] = config['Achievements'].pop(key)
     config['Achievements']['Enabled'] = 'false'
 
-    # Write updated config
+    # Write updated config back
     with open(ini_path, 'w') as f:
         config.write(f)
 
 def setup_pine():
-    """Determine port and create Pine instance early"""
+    """Determine port and create Pine instance"""
     host_settings = get_settings()
     game_ini = host_settings.get('rac2_options', {}).get('game_ini')
 
