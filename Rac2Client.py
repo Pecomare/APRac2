@@ -20,9 +20,8 @@ from .ClientCheckLocations import handle_checked_location
 from .Callbacks import update, init
 from .ClientReceiveItems import handle_received_items
 from .NotificationManager import NotificationManager
-from .Rac2Interface import HUD_MESSAGE_DURATION, ConnectionState, Rac2Interface, Rac2Planet
+from .Rac2Interface import HUD_MESSAGE_DURATION, ConnectionState, create_pine_interface, Rac2Interface, Rac2Planet
 from configparser import ConfigParser
-from .Rac2Interface import create_pine_interface, Rac2Interface
 
 
 def find_free_port(start=28021, end=28031):
