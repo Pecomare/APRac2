@@ -25,6 +25,7 @@ from configparser import ConfigParser
 
 
 def find_free_port(start=28021, end=28031):
+    """Find free port for PINE"""
     for port in range(start, end + 1):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
@@ -32,29 +33,51 @@ def find_free_port(start=28021, end=28031):
                 return port
             except OSError:
                 continue
-    return 28011
+    return 28011  # fallback default
 
-def set_pine_port(ini_path, port):
+
+def ensure_pine_settings(ini_path: str, port: int = 28011):
+    """Ensure INI has [EmuCore] with enablepine and pineslot set correctly"""
     config = ConfigParser()
-    config.read(ini_path)
-    if 'EmuCore' in config and 'PINESlot' in config['EmuCore']:
-        config['EmuCore']['PINESlot'] = str(port)
+    config.optionxform = str  # preserve key case
+    
+    # If INI file missing but path valid → create a minimal one
+    if not os.path.exists(ini_path) and os.path.isdir(os.path.dirname(ini_path)):
         with open(ini_path, 'w') as f:
-            config.write(f)
+            f.write("[EmuCore]\n")
+    
+    config.read(ini_path)
+
+    # --- EmuCore section ---
+    if 'EmuCore' not in config:
+        config['EmuCore'] = {}
+    config['EmuCore']['enablepine'] = 'true'
+    config['EmuCore']['PINESlot'] = str(port)
+
+    # --- Achievements section ---
+    if 'Achievements' not in config:
+        config['Achievements'] = {}
+    config['Achievements']['enabled'] = 'false'
+
+    # Write back to disk
+    with open(ini_path, 'w') as f:
+        config.write(f)
+
 
 def setup_pine():
     """Determine port and create Pine instance early"""
     host_settings = get_settings()
     game_ini = host_settings.get('rac2_options', {}).get('game_ini')
 
-    if game_ini and os.path.exists(game_ini):
+    if game_ini and os.path.exists(os.path.dirname(game_ini)):
         port = find_free_port()
-        set_pine_port(game_ini, port)
+        ensure_pine_settings(game_ini, port)
     else:
         port = 28011
 
     create_pine_interface(port)
     return port
+
 
 # Run early so Pine instance exists for Rac2Interface
 pine_port = setup_pine()
