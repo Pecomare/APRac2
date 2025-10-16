@@ -35,6 +35,7 @@ def find_free_port(start=28021, end=28031):
                 continue
     return 28011  # fallback default
 
+
 def ensure_pine_settings(ini_path: str, port: int = 28011):
     """Ensure INI has configuration for PINE."""
     config = ConfigParser()
@@ -77,19 +78,21 @@ def ensure_pine_settings(ini_path: str, port: int = 28011):
     with open(ini_path, 'w') as f:
         config.write(f)
 
+
 def setup_pine():
-    """Determine port and create Pine instance"""
+    """Determine port and create Pine instance."""
     host_settings = get_settings()
     game_ini = host_settings.get('rac2_options', {}).get('game_ini')
 
+    # Only pick port here; do not touch ini yet
     if game_ini and os.path.exists(os.path.dirname(game_ini)):
         port = find_free_port()
-        ensure_pine_settings(game_ini, port)
     else:
         port = 28011
 
     create_pine_interface(port)
     return port
+
 
 # Run early so Pine instance exists for Rac2Interface
 pine_port = setup_pine()
@@ -319,6 +322,7 @@ async def run_game(iso_file):
 
 
 async def patch_and_run_game(aprac2_file: str):
+    """Patch ISO if needed, ensure copied INI has correct PINE configuration, and launch game."""
     settings: Optional[Rac2Settings] = get_settings().get("rac2_options", False)
     assert settings, "No Rac2 Settings?"
 
@@ -326,7 +330,7 @@ async def patch_and_run_game(aprac2_file: str):
     base_name = os.path.splitext(aprac2_file)[0]
     output_path = base_name + '.iso'
 
-    # --- Always determine CRC + version once the ISO exists or is created ---
+    # Patch ISO if missing
     if not os.path.exists(output_path):
         from .PatcherUI import PatcherUI
         patcher = PatcherUI(aprac2_file, output_path, logger)
@@ -342,10 +346,13 @@ async def patch_and_run_game(aprac2_file: str):
             file_name = f"{version}_{crc:X}.ini"
             file_path = os.path.join(os.path.dirname(game_ini_path), file_name)
 
-            # Always ensure up-to-date settings (even if ISO already existed)
+            # Always create or refresh a CRC-based ini copy
             shutil.copy(game_ini_path, file_path)
             ensure_pine_settings(file_path, pine_port)
-            logger.info(f"Configured PINE on port {pine_port} in {os.path.basename(file_path)}")
+
+            logger.info(f"Configured PINE (port {pine_port}) in {os.path.basename(file_path)}")
+    else:
+        logger.warning("No valid game_ini found; skipping INI setup.")
 
     Utils.async_start(run_game(output_path))
 
