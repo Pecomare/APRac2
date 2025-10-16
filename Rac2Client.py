@@ -35,34 +35,36 @@ def find_free_port(start=28021, end=28031):
                 continue
     return 28011  # fallback default
 
-
 def ensure_pine_settings(ini_path: str, port: int = 28011):
-    """Ensure INI has [EmuCore] with enablepine and pineslot set correctly"""
+    """Ensure INI has [EmuCore] and [Achievements] configured for Pine"""
     config = ConfigParser()
     config.optionxform = str  # preserve key case
-    
-    # If INI file missing but path valid → create a minimal one
-    if not os.path.exists(ini_path) and os.path.isdir(os.path.dirname(ini_path)):
+
+    ini_dir = os.path.dirname(ini_path)
+    if not os.path.exists(ini_dir):
+        os.makedirs(ini_dir, exist_ok=True)
+
+    # Create a minimal INI file if it doesn't exist but the directory is valid
+    if not os.path.exists(ini_path):
         with open(ini_path, 'w') as f:
             f.write("[EmuCore]\n")
-    
+
     config.read(ini_path)
 
     # --- EmuCore section ---
     if 'EmuCore' not in config:
         config['EmuCore'] = {}
     config['EmuCore']['enablepine'] = 'true'
-    config['EmuCore']['PINESlot'] = str(port)
+    config['EmuCore']['pineslot'] = str(port)
 
     # --- Achievements section ---
     if 'Achievements' not in config:
         config['Achievements'] = {}
     config['Achievements']['enabled'] = 'false'
 
-    # Write back to disk
+    # Write updated config
     with open(ini_path, 'w') as f:
         config.write(f)
-
 
 def setup_pine():
     """Determine port and create Pine instance early"""
@@ -77,7 +79,6 @@ def setup_pine():
 
     create_pine_interface(port)
     return port
-
 
 # Run early so Pine instance exists for Rac2Interface
 pine_port = setup_pine()
@@ -314,6 +315,7 @@ async def patch_and_run_game(aprac2_file: str):
     base_name = os.path.splitext(aprac2_file)[0]
     output_path = base_name + '.iso'
 
+    # --- Always determine CRC + version once the ISO exists or is created ---
     if not os.path.exists(output_path):
         from .PatcherUI import PatcherUI
         patcher = PatcherUI(aprac2_file, output_path, logger)
@@ -328,7 +330,11 @@ async def patch_and_run_game(aprac2_file: str):
         if version and crc:
             file_name = f"{version}_{crc:X}.ini"
             file_path = os.path.join(os.path.dirname(game_ini_path), file_name)
+
+            # Always ensure up-to-date settings (even if ISO already existed)
             shutil.copy(game_ini_path, file_path)
+            ensure_pine_settings(file_path, pine_port)
+            logger.info(f"Configured PINE on port {pine_port} in {os.path.basename(file_path)}")
 
     Utils.async_start(run_game(output_path))
 
