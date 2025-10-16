@@ -54,13 +54,13 @@ def ensure_pine_settings(ini_path: str, port: int = 28011):
     # --- EmuCore section ---
     if 'EmuCore' not in config:
         config['EmuCore'] = {}
-    config['EmuCore']['enablepine'] = 'true'
-    config['EmuCore']['pineslot'] = str(port)
+    config['EmuCore']['EnablePINE'] = 'true'
+    config['EmuCore']['PINESlot'] = str(port)
 
     # --- Achievements section ---
     if 'Achievements' not in config:
         config['Achievements'] = {}
-    config['Achievements']['enabled'] = 'false'
+    config['Achievements']['Enabled'] = 'false'
 
     # Write updated config
     with open(ini_path, 'w') as f:
