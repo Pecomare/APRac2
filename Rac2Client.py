@@ -8,6 +8,8 @@ import os
 import subprocess
 import traceback
 import socket
+import tkinter as tk
+from tkinter import filedialog
 
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, logger, server_loop, gui_enabled
 from NetUtils import ClientStatus
@@ -34,7 +36,6 @@ def find_free_port(start=28021, end=28031):
             except OSError:
                 continue
     return 28011  # fallback default
-
 
 def ensure_pine_settings(ini_path: str, port: int = 28011):
     """Ensure INI has configuration for PINE."""
@@ -78,7 +79,6 @@ def ensure_pine_settings(ini_path: str, port: int = 28011):
     with open(ini_path, 'w') as f:
         config.write(f)
 
-
 def setup_pine():
     """Determine port and create Pine instance."""
     host_settings = get_settings()
@@ -93,10 +93,55 @@ def setup_pine():
     create_pine_interface(port)
     return port
 
-
 # Run early so Pine instance exists for Rac2Interface
 pine_port = setup_pine()
 
+def validate_rac2_settings():
+    """Validate rac2_options from host.yaml before continuing."""
+    host_settings = get_settings()
+    rac2_opts = host_settings.get("rac2_options", {})
+
+    problems = []
+
+    # ISO file
+    iso_file = rac2_opts.get("iso_file")
+    if not iso_file:
+        problems.append("Missing 'iso_file' in rac2_options.")
+    else:
+        iso_file_expanded = os.path.expandvars(os.path.expanduser(iso_file))
+        if not os.path.isfile(iso_file_expanded):
+            problems.append(f"ISO file not found: {iso_file_expanded}")
+
+    # ISO start (PCSX2 path)
+    iso_start = rac2_opts.get("iso_start")
+    if iso_start in (None, ""):
+        problems.append("Missing 'iso_start' — should be path to PCSX2.")
+    elif isinstance(iso_start, str):
+        iso_start_expanded = os.path.expandvars(os.path.expanduser(iso_start))
+        if not os.path.isfile(iso_start_expanded):
+            problems.append(f"'iso_start' path does not exist: {iso_start_expanded}")
+        elif not iso_start_expanded.lower().endswith(("pcsx2.exe", "pcsx2-qt.exe")):
+            problems.append(f"'iso_start' doesn't look like a PCSX2 executable (pcsx2.exe or pcsx2-qt.exe): {iso_start_expanded}")
+
+    # Game INI
+    game_ini = rac2_opts.get("game_ini")
+    if not game_ini:
+        problems.append("Missing 'game_ini' path — should point to a PCSX2 game settings INI file.")
+    else:
+        game_ini_expanded = os.path.expandvars(os.path.expanduser(game_ini))
+        if not os.path.isfile(game_ini_expanded):
+            problems.append(f"Game INI not found: {game_ini_expanded}")
+
+    # Report
+    if problems:
+        logger.warning("Rac2 configuration issues detected:")
+        for p in problems:
+            logger.warning(f"  - {p}")
+        logger.warning("Please check your host.yaml rac2_options section, and restart.")
+        return False
+
+    # logger.info("rac2_options verified successfully.")
+    return True
 
 class Rac2CommandProcessor(ClientCommandProcessor):
     def __init__(self, ctx: CommonContext):
@@ -133,6 +178,51 @@ class Rac2CommandProcessor(ClientCommandProcessor):
             message = f"Deathlink {'enabled' if self.ctx.death_link_enabled else 'disabled'}"
             logger.info(message)
             self.ctx.notification_manager.queue_notification(message)
+
+    def _cmd_start(self):
+        """Select and start with a .aprac2 patch file."""
+        if not isinstance(self.ctx, Rac2Context):
+            logger.error("Not in a valid RAC2 context.")
+            return
+
+        # Prevent launching if already connected to PCSX2
+        if self.ctx.game_interface.get_connection_state():
+            msg = "Already connected to Ratchet & Clank 2 / PCSX2 — please close old instance or open another client."
+            logger.warning(msg)
+            self.ctx.notification_manager.queue_notification(msg)
+            return
+
+        # Validate rac2 host.yaml options
+        if not validate_rac2_settings():
+            return
+
+        # Open file dialog
+        root = tk.Tk()
+        root.withdraw()
+        file_path = filedialog.askopenfilename(
+            title="Select a Ratchet & Clank 2 .aprac2 file",
+            filetypes=[("Archipelago RAC2 Patch Files", "*.aprac2"), ("All Files", "*.*")]
+        )
+        root.destroy()
+
+        if not file_path:
+            logger.info("No file selected.")
+            return
+
+        # Launch async patching + game startup
+        logger.info(f"Selected patch: {file_path}")
+        self.ctx.notification_manager.queue_notification("Launching selected patch file...")
+
+        async def start_patch():
+            try:
+                await patch_and_run_game(file_path)
+                self.ctx.auth = get_name_from_aprac2(file_path)
+                logger.info("Game launch initiated.")
+            except Exception as e:
+                logger.error(f"Failed to start patch: {e}")
+                self.ctx.notification_manager.queue_notification(f"Error: {e}")
+
+        Utils.async_start(start_patch(), name="Manual Patch Launch")
 
 
 class Rac2Context(CommonContext):
