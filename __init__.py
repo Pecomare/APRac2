@@ -33,6 +33,37 @@ class Rac2Settings(settings.Group):
         description = "Ratchet & Clank 2 PS2 ISO file"
         copy_to = "Ratchet & Clank 2.iso"
 
+    def copy(self, target_dir: str):
+        """Copy ISO and confirm the copy is complete."""
+        from CommonClient import logger  # safely import logger here to avoid circular imports
+
+        src = os.path.expanduser(os.path.expandvars(self.value))
+        if not os.path.isfile(src):
+            raise FileNotFoundError(f"Ratchet & Clank 2 ISO not found: {src}")
+
+        dst = os.path.join(target_dir, os.path.basename(self.copy_to))
+
+        logger.info("Copying ISO to Archipelago directory — please don't close the client...")
+        logger.info(f"Source: {os.path.basename(src)} — Destination: {dst}")
+
+        # Perform copy
+        result = super().copy(target_dir)
+
+        # Verify sizes match exactly
+        src_size = os.path.getsize(src)
+        dst_size = os.path.getsize(dst)
+
+        if src_size != dst_size:
+            raise IOError(
+                f"ISO copy verification failed.\n"
+                f"Source: {src_size:,} bytes\n"
+                f"Copied: {dst_size:,} bytes\n"
+                f"({dst} may be incomplete or corrupted)"
+            )
+
+        logger.info("ISO copy completed successfully.")
+        return result
+
     class IsoStart(str):
         """
         Set this false to never autostart an iso (such as after patching),
