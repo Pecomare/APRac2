@@ -8,6 +8,7 @@ import os
 import subprocess
 import traceback
 import socket
+import platform
 import tkinter as tk
 from tkinter import filedialog
 
@@ -96,14 +97,15 @@ def setup_pine():
 # Run early so Pine instance exists for Rac2Interface
 pine_port = setup_pine()
 
-def validate_rac2_settings():
-    """Validate rac2_options from host.yaml before continuing."""
+def validate_rac2_settings() -> bool:
+    """Validate rac2_options from host.yaml before continuing.
+    Logs warnings but does not abort."""
     host_settings = get_settings()
     rac2_opts = host_settings.get("rac2_options", {})
 
     problems = []
 
-    # ISO file
+    # ISO file check
     iso_file = rac2_opts.get("iso_file")
     if not iso_file:
         problems.append("Missing 'iso_file' in rac2_options.")
@@ -114,14 +116,21 @@ def validate_rac2_settings():
 
     # ISO start (PCSX2 path)
     iso_start = rac2_opts.get("iso_start")
-    if iso_start in (None, ""):
-        problems.append("Missing 'iso_start' — should be path to PCSX2.")
+    if not iso_start:
+        problems.append("Missing 'iso_start' — should be path to PCSX2 executable.")
     elif isinstance(iso_start, str):
         iso_start_expanded = os.path.expandvars(os.path.expanduser(iso_start))
         if not os.path.isfile(iso_start_expanded):
             problems.append(f"'iso_start' path does not exist: {iso_start_expanded}")
-        elif not iso_start_expanded.lower().endswith(("pcsx2.exe", "pcsx2-qt.exe")):
-            problems.append(f"'iso_start' doesn't look like a PCSX2 executable (pcsx2.exe or pcsx2-qt.exe): {iso_start_expanded}")
+        else:
+            system = platform.system().lower()
+            exe_name = os.path.basename(iso_start_expanded).lower()
+            # Windows check
+            if system == "windows" and not exe_name.endswith(("pcsx2.exe", "pcsx2-qt.exe")):
+                problems.append(f"On Windows, PCSX2 executable usually ends with pcsx2.exe — got {exe_name}")
+            # Linux/macOS check
+            elif system in ("linux", "darwin") and "pcsx2" not in exe_name:
+                problems.append(f"Expected 'pcsx2' binary on {system.capitalize()}, got {exe_name}")
 
     # Game INI
     game_ini = rac2_opts.get("game_ini")
@@ -132,16 +141,22 @@ def validate_rac2_settings():
         if not os.path.isfile(game_ini_expanded):
             problems.append(f"Game INI not found: {game_ini_expanded}")
 
-    # Report
+    # Always warn, never block
     if problems:
-        logger.warning("Rac2 configuration issues detected:")
+        logger.warning("⚠ Rac2 configuration issues detected:")
         for p in problems:
             logger.warning(f"  - {p}")
-        logger.warning("Please check your host.yaml rac2_options section, and restart.")
-        return False
+        logger.warning("Continuing anyway; the game may still launch normally.")
 
-    # logger.info("rac2_options verified successfully.")
-    return True
+        # Notify user in-client
+        try:
+            ctx = globals().get("ctx")  # use context if available
+            if ctx and hasattr(ctx, "notification_manager"):
+                ctx.notification_manager.queue_notification("Some RAC2 config issues found (see above). Continuing anyway.")
+        except Exception:
+            pass
+
+    return True  # Always return True now
 
 class Rac2CommandProcessor(ClientCommandProcessor):
     def __init__(self, ctx: CommonContext):
