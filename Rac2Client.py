@@ -9,6 +9,7 @@ import subprocess
 import traceback
 import socket
 import platform
+import errno
 import tkinter as tk
 from tkinter import filedialog
 
@@ -26,17 +27,53 @@ from .NotificationManager import NotificationManager
 from .Rac2Interface import HUD_MESSAGE_DURATION, ConnectionState, create_pine_interface, Rac2Interface, Rac2Planet
 from configparser import ConfigParser
 
+DEFAULT_PINE_PORT = 28011
 
 def find_free_port(start=28021, end=28031):
-    """Find free port for PINE"""
+    system_name = platform.system()
+
+    # On Windows, keep the old TCP-based logic
+    if system_name == "Windows":
+        for port in range(start, end + 1):
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                try:
+                    s.bind(("127.0.0.1", port))
+                    return port
+                except OSError:
+                    continue
+        return DEFAULT_PINE_PORT
+
+    # On Linux/macOS, check for existing socket files instead
+    base_dir = os.environ.get("XDG_RUNTIME_DIR") or os.environ.get("TMPDIR") or "/tmp"
+
     for port in range(start, end + 1):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        if port == DEFAULT_PINE_PORT:
+            sock_path = os.path.join(base_dir, "pcsx2.sock")
+        else:
+            sock_path = os.path.join(base_dir, f"pcsx2.sock.{port}")
+
+        # If socket file exists, test whether it’s actually active
+        if os.path.exists(sock_path):
             try:
-                s.bind(("127.0.0.1", port))
+                with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+                    s.connect(sock_path)
+                    # If we connected, it’s in use
+                    continue
+            except OSError as e:
+                # Connection failed → likely stale socket file, safe to remove
+                if e.errno in (errno.ECONNREFUSED, errno.ENOENT):
+                    try:
+                        os.remove(sock_path)
+                    except OSError:
+                        pass
+                # In either case, we can reuse this port now
                 return port
-            except OSError:
-                continue
-    return 28011  # fallback default
+        else:
+            # No such file → definitely free
+            return port
+
+    # Fallback if all taken
+    return DEFAULT_PINE_PORT
 
 def ensure_pine_settings(ini_path: str, port: int = 28011):
     """Ensure INI has configuration for PINE."""
