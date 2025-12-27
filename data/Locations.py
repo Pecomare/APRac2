@@ -78,9 +78,9 @@ SIBERIUS_FLAMEBOT_LEDGE_PB = LocationData(71, "Siberius: Flamebot Ledge - Platin
 SIBERIUS_FENCED_AREA_PB = LocationData(72, "Siberius: Fenced Area - Platinum Bolt", siberius_fenced_area_pb_rule)
 
 """ Tabora """
-TABORA_MEET_ANGELA = LocationData(80, "Tabora: Meet Angela", tabora_meet_angelar_rule)
+TABORA_MEET_ANGELA = LocationData(80, "Tabora: Meet Angela", tabora_meet_angela_rule)
 TABORA_UNDERGROUND_MINES_END = LocationData(81, "Tabora: Underground Mines - Glider", tabora_underground_mines_end_rule)
-TABORA_UNDERGROUND_MINES_PB = LocationData(82, "Tabora: Underground Mines - Platinum Bolt", tabora_underground_mines_end_rule)
+TABORA_UNDERGROUND_MINES_PB = LocationData(82, "Tabora: Underground Mines - Platinum Bolt", tabora_underground_mines_pb_rule)
 TABORA_CANYON_GLIDE_PB = LocationData(83, "Tabora: Canyon Glide - Platinum Bolt", tabora_canyon_glide_pb_rule)
 TABORA_NORTHEAST_DESERT_PB = LocationData(84, "Tabora: Northeast Desert - Platinum Bolt", tabora_northeast_desert_pb_rule)
 TABORA_CANYON_GLIDE_PILLAR_NT = LocationData(85, "Tabora: Canyon Glide Pillar - Nanotech Boost", tabora_canyon_glide_pillar_nt_rule)
