@@ -235,7 +235,7 @@ def notak_top_pier_telescreen_rule(state: CollectionState, player: int) -> bool:
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_MEDIUM:
         # wall jump in the thermanator room
-        return True
+        return can_thermanate(state, player)
 
     return False
 
@@ -265,11 +265,13 @@ def notak_timed_dynamo_rule(state: CollectionState, player: int) -> bool:
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_HARD:
         # wall jump in the thermanator room and decoy or turret clip
-        return can_clip(state, player)
+        return (can_thermanate(state, player)
+                and can_clip(state, player))
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_MEDIUM:
         # wall jump in the thermanator room
-        return can_dynamo(state, player)
+        return (can_thermanate(state, player)
+                and can_dynamo(state, player))
 
     return False
 
