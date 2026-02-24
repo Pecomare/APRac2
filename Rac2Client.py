@@ -269,6 +269,12 @@ class Rac2CommandProcessor(ClientCommandProcessor):
             try:
                 await patch_and_run_game(file_path)
                 self.ctx.auth = get_name_from_aprac2(file_path)
+                
+                connect_address = get_connection_info_from_aprac2(file_path)
+                if connect_address:
+                    logger.info(f"Auto-connecting to {connect_address}")
+                    self.ctx.server_address = connect_address
+                    await self.ctx.connect(connect_address)
                 logger.info("Game launch initiated.")
             except Exception as e:
                 logger.error(f"Failed to start patch: {e}")
@@ -506,6 +512,31 @@ def get_name_from_aprac2(aprac2_path: str) -> str:
             archipelago_json = json.loads(archipelago_json)
     return cast(Dict[str, Any], archipelago_json)["player_name"]
 
+def get_connection_info_from_aprac2(aprac2_path: str) -> Optional[str]:
+    try:
+        with zipfile.ZipFile(aprac2_path) as zip_file:
+            with zip_file.open("archipelago.json") as file:
+                archipelago_json = json.loads(file.read().decode("utf-8"))
+
+        server = archipelago_json.get("server")
+
+        if not server:
+            return None
+
+        # Already includes port (new WebHost format)
+        if ":" in server:
+            return server
+
+        # Older format fallback
+        port = archipelago_json.get("port")
+        if port:
+            return f"{server}:{port}"
+
+    except Exception as e:
+        logger.debug(f"No valid connection info in patch: {e}")
+
+    return None
+
 
 def get_pcsx2_crc(iso_path: str) -> Optional[int]:
     if not os.path.exists(iso_path):
@@ -532,7 +563,15 @@ def launch():
                             help='Path to an aprac2 file')
         args = parser.parse_args()
 
-        ctx = Rac2Context(args.connect, args.password)
+        connect_address = args.connect
+        
+        # If no manual connect address, try to get from patch file
+        if not connect_address and args.aprac2_file and os.path.isfile(args.aprac2_file):
+            connect_address = get_connection_info_from_aprac2(args.aprac2_file)
+            if connect_address:
+                logger.info(f"Auto-connect address found in patch: {connect_address}")
+        
+        ctx = Rac2Context(connect_address, args.password)
 
         if os.path.isfile(args.aprac2_file):
             logger.info("aprac2 file supplied, beginning patching process...")
