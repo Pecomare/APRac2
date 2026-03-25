@@ -13,7 +13,8 @@ import errno
 import tkinter as tk
 from tkinter import filedialog
 
-from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, logger, server_loop, gui_enabled
+#from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, logger, server_loop, gui_enabled
+from CommonClient import CommonContext
 from NetUtils import ClientStatus
 import Utils
 from settings import get_settings
@@ -28,6 +29,18 @@ from .Rac2Interface import HUD_MESSAGE_DURATION, ConnectionState, create_pine_in
 from configparser import ConfigParser
 
 DEFAULT_PINE_PORT = 28011
+
+# --- Universal Tracker (optional) ---
+tracker_loaded = False
+try:
+    from worlds.tracker.TrackerClient import (
+        ClientCommandProcessor, TrackerGameContext as SuperContext, server_loop, gui_enabled, get_base_parser, logger
+    )
+    tracker_loaded = True
+except ModuleNotFoundError:
+    from CommonClient import (
+        ClientCommandProcessor, CommonContext as SuperContext, server_loop, gui_enabled, get_base_parser, logger
+    )
 
 def find_free_port(start=28021, end=28031):
     system_name = platform.system()
@@ -283,7 +296,7 @@ class Rac2CommandProcessor(ClientCommandProcessor):
         Utils.async_start(start_patch(), name="Manual Patch Launch")
 
 
-class Rac2Context(CommonContext):
+class Rac2Context(SuperContext):
     current_planet: Optional[Rac2Planet] = None
     previous_planet: Optional[Rac2Planet] = None
     is_pending_death_link_reset = False
@@ -340,16 +353,7 @@ class Rac2Context(CommonContext):
             }]))
 
     def run_gui(self):
-        from kvui import GameManager
-
-        class Rac2Manager(GameManager):
-            logging_pairs = [
-                ("Client", "Archipelago")
-            ]
-            base_title = "Archipelago Ratchet & Clank 2 Client"
-
-        self.ui = Rac2Manager(self)
-        self.ui_task = asyncio.create_task(self.ui.async_run(), name="UI")
+        super().run_gui()
 
 
 def update_connection_status(ctx: Rac2Context, status: bool):
@@ -572,6 +576,13 @@ def launch():
                 logger.info(f"Auto-connect address found in patch: {connect_address}")
         
         ctx = Rac2Context(connect_address, args.password)
+
+        # Per UT docs: call ctx.run_generator() if UT was found
+        if tracker_loaded and hasattr(ctx, "run_generator"):
+            try:
+                ctx.run_generator()
+            except Exception:
+                logger.exception("Universal Tracker run_generator failed")
 
         if os.path.isfile(args.aprac2_file):
             logger.info("aprac2 file supplied, beginning patching process...")

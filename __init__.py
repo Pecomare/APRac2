@@ -146,5 +146,16 @@ class Rac2World(World):
             "extend_weapon_progression",
         )
 
+    # UT Yaml-less flag
+    ut_can_gen_without_yaml = True
+
+    def generate_early(self) -> None:
+        if hasattr(self.multiworld, "re_gen_passthrough"):
+            if self.player in self.multiworld.re_gen_passthrough:
+                for key, val in self.multiworld.re_gen_passthrough[self.player].items():
+                    opt = getattr(self.options, key, None)
+                    if opt and hasattr(opt, "value"):
+                        opt.value = val
+
     def fill_slot_data(self) -> Mapping[str, Any]:
         return self.get_options_as_dict()
