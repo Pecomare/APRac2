@@ -151,8 +151,8 @@ class Rac2World(World):
 
     def generate_early(self) -> None:
         if hasattr(self.multiworld, "re_gen_passthrough"):
-            if self.player in self.multiworld.re_gen_passthrough:
-                for key, val in self.multiworld.re_gen_passthrough[self.player].items():
+            if self.game in self.multiworld.re_gen_passthrough:
+                for key, val in self.multiworld.re_gen_passthrough[self.game].items():
                     opt = getattr(self.options, key, None)
                     if opt and hasattr(opt, "value"):
                         opt.value = val
