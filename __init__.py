@@ -85,6 +85,40 @@ class Rac2World(World):
     starting_weapons: list[EquipmentData] = []
     prefilled_item_map: Dict[str, str] = {}  # Dict of location name to item name
 
+    # this is how we tell the Universal Tracker we want to use re_gen_passthrough
+    @staticmethod
+    def interpret_slot_data(slot_data: Dict[str, Any]) -> Dict[str, Any]:
+        return slot_data
+
+    # and this is how we tell Universal Tracker we don't need the yaml
+    ut_can_gen_without_yaml = True
+
+    def generate_early(self) -> None:
+        # implement .yaml-less Universal Tracker support
+        if hasattr(self.multiworld, "generation_is_fake"):
+            if hasattr(self.multiworld, "re_gen_passthrough"):
+                # I'm doing getattr purely so pylance stops being mad at me
+                re_gen_passthrough = getattr(self.multiworld, "re_gen_passthrough")
+
+                if "Ratchet & Clank 2" in re_gen_passthrough:
+                    slot_data = re_gen_passthrough["Ratchet & Clank 2"]
+                    self.options.start_inventory_from_pool.value = slot_data["StartInventoryPool"]
+                    self.options.death_link.value = slot_data["DeathLink"]
+                    self.options.starting_weapons.value = slot_data["StartingWeapons"]
+                    self.options.randomize_megacorp_vendor.value = slot_data["RandomizeMegacorpVendor"]
+                    self.options.randomize_gadgetron_vendor.value = slot_data["RandomizeGadgetronVendor"]
+                    self.options.exclude_very_expensive_items.value = slot_data["ExcludeVeryExpensiveItems"]
+                    self.options.skip_wupash_nebula.value = slot_data["SkipWupashNebula"]
+                    self.options.enable_bolt_multiplier.value = slot_data["EnableBoltMultiplier"]
+                    self.options.no_revisit_reward_change.value = slot_data["NoRevisitRewardChange"]
+                    self.options.no_kill_reward_degradation.value = slot_data["NoKillRewardDegradation"]
+                    self.options.free_challenge_selection.value = slot_data["FreeChallengeSelection"]
+                    self.options.nanotech_xp_multiplier.value = slot_data["NanotechExperienceMultiplier"]
+                    self.options.extra_spaceship_challenge_locations.value = slot_data["ExtraSpaceshipChallengeLocations"]
+                    self.options.extend_weapon_progression.value = slot_data["ExtendWeaponProgression"]
+                    self.options.first_person_mode_glitch_in_logic.value = slot_data["FirstPersonModeGlitchInLogic"]
+            return
+
     def get_filler_item_name(self) -> str:
         return Items.BOLT_PACK.name
 
