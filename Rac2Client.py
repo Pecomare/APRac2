@@ -26,6 +26,7 @@ from .ClientReceiveItems import handle_received_items
 from .NotificationManager import NotificationManager
 from .Rac2Interface import HUD_MESSAGE_DURATION, ConnectionState, create_pine_interface, Rac2Interface, Rac2Planet
 from configparser import ConfigParser
+from . import get_world_version
 
 DEFAULT_PINE_PORT = 28011
 
@@ -316,9 +317,13 @@ class Rac2Context(CommonContext):
 
     def __init__(self, server_address, password):
         super().__init__(server_address, password)
-        self.version = [0,6,4,4] #Update manually
+        self.client_version = tuple(get_world_version())
+        self.server_version = None
         self.game_interface = Rac2Interface(logger)
         self.notification_manager = NotificationManager(HUD_MESSAGE_DURATION)
+
+    def _normalize_version(self, v):
+        return tuple(v[i] if i < len(v) else 0 for i in range(4))
 
     def run_generator(self):
         if tracker_loaded:
@@ -326,13 +331,46 @@ class Rac2Context(CommonContext):
 
     def make_gui(self):
         ui = super().make_gui()
-        ui.base_title = f"Ratchet & Clank 2 Client v{'.'.join([str(i) for i in self.version])}"
+        client_ver = '.'.join(map(str, self.client_version))
+        title = f"Ratchet & Clank 2 Client v{client_ver}"
         if tracker_loaded:
-            ui.base_title += f" | Universal Tracker {UT_VERSION}"
-
+            try:
+                from worlds.tracker.TrackerClient import UT_VERSION
+                title += f" | Universal Tracker {UT_VERSION}"
+            except Exception:
+                pass
         # AP version is added behind this automatically
-        ui.base_title += " | Archipelago"
+        title += " | Archipelago"
+        ui.base_title = title
         return ui
+
+    def _update_window_title(self):
+        if not hasattr(self, "ui") or not getattr(self.ui, "root", None):
+            return
+
+        client_ver = '.'.join(map(str, self.client_version))
+        title = f"Ratchet & Clank 2 Client v{client_ver}"
+
+        if self.server_version:
+            server_ver = '.'.join(map(str, self.server_version))
+            title += f" | Host v{server_ver}"
+        else:
+            title += " | Host v?"
+
+        if tracker_loaded:
+            try:
+                from worlds.tracker.TrackerClient import UT_VERSION
+                title += f" | Universal Tracker {UT_VERSION}"
+            except Exception:
+                pass
+
+        title += " | Archipelago"
+
+        try:
+            self.ui.base_title = title
+            self.ui.root.title(title)
+        except Exception:
+            pass
 
     def on_deathlink(self, data: Utils.Dict[str, Utils.Any]) -> None:
         super().on_deathlink(data)
@@ -354,11 +392,35 @@ class Rac2Context(CommonContext):
         super().on_package(cmd, args)
         if cmd == "Connected":
             self.slot_data = args["slot_data"]
+
+            # Version handling
+            raw_version = self.slot_data.get("world_version")
+            if raw_version:
+                self.server_version = tuple(raw_version)
+            else:
+                self.server_version = None
+
+            client_v = self._normalize_version(self.client_version)
+            server_v = self._normalize_version(self.server_version) if self.server_version else None
+
+            if server_v:
+                if client_v[:2] != server_v[:2]:
+                    logger.warning(
+                        f"Incompatible version! Host: {server_v}, Client: {client_v}. "
+                        f"(Replace your apworld + restart Archipelago)"
+                    )
+                elif client_v != server_v:
+                    logger.info(
+                        f"Minor version difference. Host: {server_v}, Client: {client_v}. "
+                        f"(Universal Tracker may not work correctly)"
+                    )
+            else:
+                logger.info("Host world version unknown.")
+
             # Set death link tag if it was requested in options
-            if "death_link" in args["slot_data"]:
-                self.death_link_enabled = bool(args["slot_data"]["death_link"])
-                Utils.async_start(self.update_death_link(
-                    bool(args["slot_data"]["death_link"])))
+            if "death_link" in self.slot_data:
+                self.death_link_enabled = bool(self.slot_data["death_link"])
+                Utils.async_start(self.update_death_link(self.death_link_enabled))
 
             # Scout all active locations for lookups that may be required later on
             all_locations = [loc.location_id for loc in get_all_active_locations(self.slot_data)]
@@ -367,6 +429,10 @@ class Rac2Context(CommonContext):
                 "cmd": "LocationScouts",
                 "locations": list(self.locations_scouted)
             }]))
+
+            # Update title after connect
+            self._update_window_title()
+
 
 def update_connection_status(ctx: Rac2Context, status: bool):
     if ctx.is_connected == status:
@@ -426,14 +492,14 @@ async def _handle_game_ready(ctx: Rac2Context):
     if ctx.is_loading:
         if not ctx.game_interface.is_loading():
             ctx.is_loading = False
-            # current_planet = ctx.game_interface.get_current_planet()
-            # if current_planet is not None:
+            #current_planet = ctx.game_interface.get_current_planet()
+            #if current_planet is not None:
             #    logger.info(f"Loaded planet {current_planet} ({current_planet.name})")
             await asyncio.sleep(1)
         await asyncio.sleep(0.1)
         return
     elif ctx.game_interface.is_loading():
-        # ctx.game_interface.logger.info("Waiting for planet to load...")
+        #ctx.game_interface.logger.info("Waiting for planet to load...")
         ctx.is_loading = True
         return
 

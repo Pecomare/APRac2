@@ -16,6 +16,11 @@ from .Container import Rac2ProcedurePatch, generate_patch
 from .Rac2Options import Rac2Options
 
 
+WORLD_VERSION = (0, 6, 4, 4)  # update manually before release
+
+def get_world_version():
+    return WORLD_VERSION
+
 def run_client(_url: Optional[str] = None):
     from .Rac2Client import launch
     launch_subprocess(launch, name="Rac2Client")
@@ -191,4 +196,6 @@ class Rac2World(World):
         )
 
     def fill_slot_data(self) -> Mapping[str, Any]:
-        return self.get_options_as_dict()
+        slot_data = self.get_options_as_dict()
+        slot_data["world_version"] = list(get_world_version())
+        return slot_data

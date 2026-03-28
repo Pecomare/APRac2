@@ -288,7 +288,7 @@ def dobbo_facility_terminal_rule(state: CollectionState, player: int) -> bool:
 
     if options.first_person_mode_glitch_in_logic >= FIRST_PERSON_MEDIUM:
         return (can_glide(state, player)
-            and can_electrolyze(state, player))
+                and can_electrolyze(state, player))
 
     return (can_swingshot(state, player)
             and can_glide(state, player)
@@ -569,7 +569,7 @@ def aranos_omniwrench_12000_rule(state: CollectionState, player: int) -> bool:
 def snivelak_rescue_angelak_rule(state: CollectionState, player: int) -> bool:
     options = get_options(state, player)
 
-    if options.first_person_mode_glitch_in_logic >+ FIRST_PERSON_EASY:
+    if options.first_person_mode_glitch_in_logic >= FIRST_PERSON_EASY:
         return can_swingshot(state, player)
 
     return (can_swingshot(state, player)
