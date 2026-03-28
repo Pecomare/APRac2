@@ -13,7 +13,7 @@ import errno
 import tkinter as tk
 from tkinter import filedialog
 
-from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, logger, server_loop, gui_enabled
+from CommonClient import get_base_parser, logger, server_loop, gui_enabled
 from NetUtils import ClientStatus
 import Utils
 from settings import get_settings
@@ -28,6 +28,19 @@ from .Rac2Interface import HUD_MESSAGE_DURATION, ConnectionState, create_pine_in
 from configparser import ConfigParser
 
 DEFAULT_PINE_PORT = 28011
+
+# Load Universal Tracker
+tracker_loaded: bool = False
+try:
+    from worlds.tracker.TrackerClient import (
+        TrackerCommandProcessor as ClientCommandProcessor,
+        TrackerGameContext as CommonContext,
+        UT_VERSION
+    )
+
+    tracker_loaded = True
+except ImportError:
+    from CommonClient import ClientCommandProcessor, CommonContext
 
 def find_free_port(start=28021, end=28031):
     system_name = platform.system()
@@ -303,8 +316,23 @@ class Rac2Context(CommonContext):
 
     def __init__(self, server_address, password):
         super().__init__(server_address, password)
+        self.version = [0,6,4,4] #Update manually
         self.game_interface = Rac2Interface(logger)
         self.notification_manager = NotificationManager(HUD_MESSAGE_DURATION)
+
+    def run_generator(self):
+        if tracker_loaded:
+            super().run_generator()
+
+    def make_gui(self):
+        ui = super().make_gui()
+        ui.base_title = f"Ratchet & Clank 2 Client v{'.'.join([str(i) for i in self.version])}"
+        if tracker_loaded:
+            ui.base_title += f" | Universal Tracker {UT_VERSION}"
+
+        # AP version is added behind this automatically
+        ui.base_title += " | Archipelago"
+        return ui
 
     def on_deathlink(self, data: Utils.Dict[str, Utils.Any]) -> None:
         super().on_deathlink(data)
@@ -323,6 +351,7 @@ class Rac2Context(CommonContext):
         await self.send_connect()
 
     def on_package(self, cmd: str, args: dict):
+        super().on_package(cmd, args)
         if cmd == "Connected":
             self.slot_data = args["slot_data"]
             # Set death link tag if it was requested in options
@@ -338,19 +367,6 @@ class Rac2Context(CommonContext):
                 "cmd": "LocationScouts",
                 "locations": list(self.locations_scouted)
             }]))
-
-    def run_gui(self):
-        from kvui import GameManager
-
-        class Rac2Manager(GameManager):
-            logging_pairs = [
-                ("Client", "Archipelago")
-            ]
-            base_title = "Archipelago Ratchet & Clank 2 Client"
-
-        self.ui = Rac2Manager(self)
-        self.ui_task = asyncio.create_task(self.ui.async_run(), name="UI")
-
 
 def update_connection_status(ctx: Rac2Context, status: bool):
     if ctx.is_connected == status:
@@ -410,14 +426,14 @@ async def _handle_game_ready(ctx: Rac2Context):
     if ctx.is_loading:
         if not ctx.game_interface.is_loading():
             ctx.is_loading = False
-            current_planet = ctx.game_interface.get_current_planet()
-            if current_planet is not None:
-                logger.info(f"Loaded planet {current_planet} ({current_planet.name})")
+            # current_planet = ctx.game_interface.get_current_planet()
+            # if current_planet is not None:
+            #    logger.info(f"Loaded planet {current_planet} ({current_planet.name})")
             await asyncio.sleep(1)
         await asyncio.sleep(0.1)
         return
     elif ctx.game_interface.is_loading():
-        ctx.game_interface.logger.info("Waiting for planet to load...")
+        # ctx.game_interface.logger.info("Waiting for planet to load...")
         ctx.is_loading = True
         return
 
@@ -580,6 +596,11 @@ def launch():
 
         logger.info("Connecting to server...")
         ctx.server_task = asyncio.create_task(server_loop(ctx), name="Server Loop")
+
+        if tracker_loaded:
+            ctx.run_generator()
+            ctx.tags.remove("Tracker")
+
         if gui_enabled:
             ctx.run_gui()
         ctx.run_cli()
