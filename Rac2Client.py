@@ -426,14 +426,14 @@ async def _handle_game_ready(ctx: Rac2Context):
     if ctx.is_loading:
         if not ctx.game_interface.is_loading():
             ctx.is_loading = False
-            current_planet = ctx.game_interface.get_current_planet()
-            if current_planet is not None:
-                logger.info(f"Loaded planet {current_planet} ({current_planet.name})")
+            # current_planet = ctx.game_interface.get_current_planet()
+            # if current_planet is not None:
+            #    logger.info(f"Loaded planet {current_planet} ({current_planet.name})")
             await asyncio.sleep(1)
         await asyncio.sleep(0.1)
         return
     elif ctx.game_interface.is_loading():
-        ctx.game_interface.logger.info("Waiting for planet to load...")
+        # ctx.game_interface.logger.info("Waiting for planet to load...")
         ctx.is_loading = True
         return
 
