@@ -102,21 +102,22 @@ class Rac2World(World):
 
                 if "Ratchet & Clank 2" in re_gen_passthrough:
                     slot_data = re_gen_passthrough["Ratchet & Clank 2"]
-                    self.options.start_inventory_from_pool.value = slot_data["StartInventoryPool"]
-                    self.options.death_link.value = slot_data["DeathLink"]
-                    self.options.starting_weapons.value = slot_data["StartingWeapons"]
-                    self.options.randomize_megacorp_vendor.value = slot_data["RandomizeMegacorpVendor"]
-                    self.options.randomize_gadgetron_vendor.value = slot_data["RandomizeGadgetronVendor"]
-                    self.options.exclude_very_expensive_items.value = slot_data["ExcludeVeryExpensiveItems"]
-                    self.options.skip_wupash_nebula.value = slot_data["SkipWupashNebula"]
-                    self.options.enable_bolt_multiplier.value = slot_data["EnableBoltMultiplier"]
-                    self.options.no_revisit_reward_change.value = slot_data["NoRevisitRewardChange"]
-                    self.options.no_kill_reward_degradation.value = slot_data["NoKillRewardDegradation"]
-                    self.options.free_challenge_selection.value = slot_data["FreeChallengeSelection"]
-                    self.options.nanotech_xp_multiplier.value = slot_data["NanotechExperienceMultiplier"]
-                    self.options.extra_spaceship_challenge_locations.value = slot_data["ExtraSpaceshipChallengeLocations"]
-                    self.options.extend_weapon_progression.value = slot_data["ExtendWeaponProgression"]
-                    self.options.first_person_mode_glitch_in_logic.value = slot_data["FirstPersonModeGlitchInLogic"]
+                    self.options.start_inventory_from_pool.value = slot_data["start_inventory_from_pool"]
+                    self.options.death_link.value = slot_data["death_link"]
+                    self.options.starting_weapons.value = slot_data["starting_weapons"]
+                    self.options.randomize_megacorp_vendor.value = slot_data["randomize_megacorp_vendor"]
+                    self.options.randomize_gadgetron_vendor.value = slot_data["randomize_gadgetron_vendor"]
+                    self.options.exclude_very_expensive_items.value = slot_data["exclude_very_expensive_items"]
+                    self.options.skip_wupash_nebula.value = slot_data["skip_wupash_nebula"]
+                    self.options.enable_bolt_multiplier.value = slot_data["enable_bolt_multiplier"]
+                    self.options.no_revisit_reward_change.value = slot_data["no_revisit_reward_change"]
+                    self.options.no_kill_reward_degradation.value = slot_data["no_kill_reward_degradation"]
+                    self.options.free_challenge_selection.value = slot_data["free_challenge_selection"]
+                    self.options.nanotech_xp_multiplier.value = slot_data["nanotech_xp_multiplier"]
+                    self.options.weapon_xp_multiplier.value = slot_data["weapon_xp_multiplier"]
+                    self.options.extra_spaceship_challenge_locations.value = slot_data["extra_spaceship_challenge_locations"]
+                    self.options.extend_weapon_progression.value = slot_data["extend_weapon_progression"]
+                    self.options.first_person_mode_glitch_in_logic.value = slot_data["first_person_mode_glitch_in_logic"]
             return
 
     def get_filler_item_name(self) -> str:
@@ -171,13 +172,22 @@ class Rac2World(World):
 
     def get_options_as_dict(self) -> Dict[str, Any]:
         return self.options.as_dict(
+            "start_inventory_from_pool",
             "death_link",
-            "skip_wupash_nebula",
-            "extra_spaceship_challenge_locations",
             "starting_weapons",
             "randomize_megacorp_vendor",
             "randomize_gadgetron_vendor",
+            "exclude_very_expensive_items",
+            "skip_wupash_nebula",
+            "enable_bolt_multiplier",
+            "no_revisit_reward_change",
+            "no_kill_reward_degradation",
+            "free_challenge_selection",
+            "nanotech_xp_multiplier",
+            "weapon_xp_multiplier",
+            "extra_spaceship_challenge_locations",
             "extend_weapon_progression",
+            "first_person_mode_glitch_in_logic"
         )
 
     def fill_slot_data(self) -> Mapping[str, Any]:
