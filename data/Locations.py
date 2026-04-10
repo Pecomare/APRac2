@@ -336,3 +336,7 @@ GADGETRON_VENDOR_LOCATIONS: Sequence[LocationData] = [
     BARLOW_GADGETRON_5,
     BARLOW_GADGETRON_6,
 ]
+
+NANOTECH_LEVEL_LOCATIONS: Sequence[LocationData] = [
+    LocationData(400 + id, f"Nanotech Level {id}") for id in range(0, 66)
+]

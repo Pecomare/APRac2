@@ -1,6 +1,6 @@
 from typing import Dict, TYPE_CHECKING
 
-from .Rac2Interface import PLANET_LIST_SIZE, INVENTORY_SIZE, NANOTECH_BOOST_MAX
+from .Rac2Interface import PLANET_LIST_SIZE, INVENTORY_SIZE, NANOTECH_BOOST_MAX, NANOTECH_LEVEL_MAX
 from .TextManager import get_rich_item_name
 from .data import Planets, Locations, Items
 
@@ -108,6 +108,10 @@ NANOTECH_OFFSET_TO_LOCATION_ID: Dict[int, int] = {
     9: Locations.DOBBO_FACILITY_GLIDE_NT.location_id,
 }
 
+NANOTECH_LEVEL_OFFSET_TO_LOCATION_ID: Dict[int, int] = {
+    id: location_id for id, location_id in Locations.NANOTECH_LEVEL_LOCATIONS
+}
+
 
 async def handle_checked_location(ctx: 'Rac2Context'):
     cleared_locations = set()
@@ -145,6 +149,14 @@ async def handle_checked_location(ctx: 'Rac2Context'):
             addr = location.checked_flag_address(ctx.game_interface.addresses)
             if ctx.game_interface.pcsx2_interface.read_int8(addr) != 0:
                 cleared_locations.add(location.location_id)
+
+    # Check nanotech xp table
+    # TODO get addresses for current xp and nanotech xp table
+    nanotech_table_start = ctx.game_interface.addresses.nanotech_xp_table
+    current_xp = ctx.game_interface.addresses.current_xp
+    for i, address in enumerate(range(nanotech_table_start, nanotech_table_start + NANOTECH_LEVEL_MAX)):
+        if i in NANOTECH_LEVEL_OFFSET_TO_LOCATION_ID and current_xp >= ctx.game_interface.pcsx2_interface.read_int32(address):
+            cleared_locations.add(NANOTECH_OFFSET_TO_LOCATION_ID[i])
 
     cleared_locations = cleared_locations.difference(ctx.checked_locations)
     item_was_bought = False
