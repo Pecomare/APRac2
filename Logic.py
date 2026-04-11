@@ -662,7 +662,7 @@ def aranos_omniwrench_12000_rule(state: CollectionState, player: int) -> bool:
     return can_gravity(state, player)
 
 
-def snivelak_rescue_angelak_rule(state: CollectionState, player: int) -> bool:
+def snivelak_rescue_angela_rule(state: CollectionState, player: int) -> bool:
     # TODO are grind boots skippable ?
     return (can_swingshot(state, player)
             and can_grind(state, player)

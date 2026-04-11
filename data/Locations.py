@@ -169,7 +169,7 @@ GORN_RACE = LocationData(
 )
 
 """ Snivelak """
-SNIVELAK_RESCUE_ANGELA = LocationData(160, "Snivelak: Rescue Angela", snivelak_rescue_angelak_rule)
+SNIVELAK_RESCUE_ANGELA = LocationData(160, "Snivelak: Rescue Angela", snivelak_rescue_angela_rule)
 SNIVELAK_DYNAMO_PLATFORMS_PB = LocationData(161, "Snivelak: Dynamo Platforms - Platinum Bolt", snivelak_dynamo_pb_rule)
 SNIVELAK_SWINGSHOT_TOWER_NT = LocationData(162, "Snivelak: Swingshot Tower - Nanotech Boost", snivelak_swingshot_tower_nt_rule)
 
