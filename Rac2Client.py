@@ -297,7 +297,7 @@ class Rac2CommandProcessor(ClientCommandProcessor):
         Utils.async_start(start_patch(), name="Manual Patch Launch")
 
 
-class Rac2Context(SuperContext):
+class Rac2Context(CommonContext):
     current_planet: Optional[Rac2Planet] = None
     previous_planet: Optional[Rac2Planet] = None
     is_pending_death_link_reset = False

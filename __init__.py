@@ -232,7 +232,7 @@ class Rac2World(World):
             "weapon_xp_multiplier",
             "extra_spaceship_challenge_locations",
             "extend_weapon_progression",
-            "first_person_mode_glitch_in_logic"
+            "glitch_logic_difficulty",
         )
 
     # UT Yaml-less flag
