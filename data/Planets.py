@@ -208,7 +208,7 @@ ALL_LOCATIONS: Sequence[LocationData] = [
     location
     for locations in [planet.locations for planet in LOGIC_PLANETS]
     for location in locations
-]
+] + [location for location in NANOTECH_LEVEL_LOCATIONS]
 
 
 def get_location_groups() -> Dict[str, Set[str]]:

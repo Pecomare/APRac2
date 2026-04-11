@@ -77,6 +77,7 @@ class Rac2Planet(IntEnum):
     Wupash_Nebula = 25
     Jamming_Array = 26
     Insomniac_Museum = 30
+    No_Planet = 40
 
 
 class PauseState(Enum):
@@ -517,6 +518,7 @@ class Rac2Interface:
         count_addrs = {
             Items.PLATINUM_BOLT.item_id: self.addresses.platinum_bolt_count,
             Items.NANOTECH_BOOST.item_id: self.addresses.nanotech_boost_count,
+            Items.NANOTECH_XP.item_id: self.addresses.nanotech_xp_count,
             Items.HYPNOMATIC_PART.item_id: self.addresses.hypnomatic_part_count,
             Items.BOLT_PACK.item_id: self.addresses.bolt_pack_count,
         }
@@ -554,6 +556,8 @@ class Rac2Interface:
             return self.pcsx2_interface.read_int8(self.addresses.hypnomatic_part_count)
         if item is Items.BOLT_PACK:
             return self.pcsx2_interface.read_int8(self.addresses.bolt_pack_count)
+        if item is Items.NANOTECH_XP:
+            return self.pcsx2_interface.read_int8(self.addresses.nanotech_xp_count)
 
     def get_current_inventory(self) -> dict[str, int]:
         inventory: dict[str, int] = {}

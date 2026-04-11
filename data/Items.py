@@ -349,6 +349,7 @@ PLATINUM_BOLT = CollectableData(301, "Platinum Bolt", 40)
 NANOTECH_BOOST = CollectableData(302, "Nanotech Boost", 10)
 HYPNOMATIC_PART = CollectableData(303, "Hypnomatic Part", 3)
 BOLT_PACK = CollectableData(304, "Bolt Pack")
+NANOTECH_XP = CollectableData(305, "Nanotech XP", 66)
 
 
 @dataclass
@@ -479,6 +480,7 @@ STARTABLE_COORDS: Sequence[CoordData] = [
 COLLECTABLES: Sequence[CollectableData] = [
     PLATINUM_BOLT,
     NANOTECH_BOOST,
+    NANOTECH_XP,
     HYPNOMATIC_PART,
     BOLT_PACK,
 ]

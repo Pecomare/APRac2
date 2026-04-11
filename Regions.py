@@ -2,7 +2,7 @@ import typing
 
 from BaseClasses import CollectionState, Region, Location
 from .Logic import can_heli, can_swingshot
-from .data import Planets
+from .data import Planets, Locations
 from .data import Items
 from .data.Planets import PlanetData
 from .data.Locations import LocationData
@@ -19,6 +19,12 @@ def create_regions(world: 'Rac2World'):
     # create all regions and populate with locations
     menu = Region("Menu", world.player, world.multiworld)
     world.multiworld.regions.append(menu)
+
+    region = Region("Nanotech XP", world.player, world.multiworld)
+    world.multiworld.regions.append(region)
+    menu.connect(region, None)
+    for location in Locations.NANOTECH_LEVEL_LOCATIONS:
+        region.add_locations({location.name: location.location_id}, Rac2Location)
 
     for planet_data in Planets.LOGIC_PLANETS:
         if planet_data.locations:

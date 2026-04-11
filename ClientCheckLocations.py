@@ -109,7 +109,7 @@ NANOTECH_OFFSET_TO_LOCATION_ID: Dict[int, int] = {
 }
 
 NANOTECH_LEVEL_OFFSET_TO_LOCATION_ID: Dict[int, int] = {
-    id: location_id for id, location_id in Locations.NANOTECH_LEVEL_LOCATIONS
+    i: location.location_id for i, location in enumerate(Locations.NANOTECH_LEVEL_LOCATIONS)
 }
 
 
@@ -150,13 +150,19 @@ async def handle_checked_location(ctx: 'Rac2Context'):
             if ctx.game_interface.pcsx2_interface.read_int8(addr) != 0:
                 cleared_locations.add(location.location_id)
 
+    max_nanotech = ctx.game_interface.pcsx2_interface.read_int8(ctx.game_interface.addresses.max_nanotech)
+    max_nanotech_from_boosts = ctx.game_interface.pcsx2_interface.read_int8(ctx.game_interface.addresses.nanotech_boost_count)
+    max_nanotech_from_xp = max_nanotech - max_nanotech_from_boosts - 4
+    if max_nanotech_from_xp <= 66:
+        for i in range(0, max_nanotech_from_xp):
+            cleared_locations.add(NANOTECH_LEVEL_OFFSET_TO_LOCATION_ID[i])
+
     # Check nanotech xp table
-    # TODO get addresses for current xp and nanotech xp table
-    nanotech_table_start = ctx.game_interface.addresses.nanotech_xp_table
-    current_xp = ctx.game_interface.addresses.current_xp
-    for i, address in enumerate(range(nanotech_table_start, nanotech_table_start + NANOTECH_LEVEL_MAX)):
-        if i in NANOTECH_LEVEL_OFFSET_TO_LOCATION_ID and current_xp >= ctx.game_interface.pcsx2_interface.read_int32(address):
-            cleared_locations.add(NANOTECH_OFFSET_TO_LOCATION_ID[i])
+    #nanotech_table_start = ctx.game_interface.addresses.nanotech_xp_table
+    #current_xp = ctx.game_interface.addresses.current_xp
+    #for i, address in enumerate(range(nanotech_table_start, nanotech_table_start + NANOTECH_LEVEL_MAX)):
+    #    if i in NANOTECH_LEVEL_OFFSET_TO_LOCATION_ID and current_xp >= ctx.game_interface.pcsx2_interface.read_int32(address):
+    #        cleared_locations.add(NANOTECH_OFFSET_TO_LOCATION_ID[i])
 
     cleared_locations = cleared_locations.difference(ctx.checked_locations)
     item_was_bought = False

@@ -38,6 +38,7 @@ def get_classification(item: ItemData) -> ItemClassification:
         Items.CHARGE_BOOTS,
         Items.PLATINUM_BOLT,
         Items.NANOTECH_BOOST,
+        Items.NANOTECH_XP,
     ]:
         return ItemClassification.useful
     if item in Items.WEAPONS or item in Items.UPGRADES:
@@ -151,6 +152,14 @@ def create_collectables(world: "Rac2World") -> list["Item"]:
     assert precollected_hypnomatic_parts <= Items.HYPNOMATIC_PART.max_capacity, "Added too many Hypnomatic Parts to Start Inventory"
     for _ in range(Items.HYPNOMATIC_PART.max_capacity - precollected_hypnomatic_parts):
         collectable_items.append(world.create_item(Items.HYPNOMATIC_PART.name))
+
+    precollected_nanotech_xp: int = len([
+        item for item in world.multiworld.precollected_items[world.player]
+        if item.code == Items.NANOTECH_XP.item_id
+    ])
+    assert precollected_nanotech_xp <= Items.NANOTECH_XP.max_capacity, "Added too many Nanotech XP to Start Inventory"
+    for _ in range(Items.NANOTECH_XP.max_capacity - precollected_nanotech_xp):
+        collectable_items.append(world.create_item(Items.NANOTECH_XP.name))
 
     return collectable_items
 
