@@ -7,6 +7,7 @@ import settings
 from worlds.AutoWorld import World, WebWorld
 from BaseClasses import Item, Tutorial, ItemClassification
 
+from .Rac2Options import VictoryConditions
 from . import ItemPool
 from .data import Items, Locations, Planets
 from .data.Items import EquipmentData
@@ -158,15 +159,54 @@ class Rac2World(World):
         remain = len(unfilled) - len(items_to_add)
         assert remain >= 0, "There are more items than locations. This is not supported."
         print(f"[RAC2 Debug] Not enough items to fill all locations. Adding {remain} filler items to the item pool")
+        if VictoryConditions.defeat_protopet not in self.options.victory_conditions: # TODO rework this to better handle the mutated protopet check
+            remain += 1
         for _ in range(remain):
             items_to_add.append(self.create_item(Items.BOLT_PACK.name, ItemClassification.filler))
 
         self.multiworld.itempool += items_to_add
 
+    def get_mutated_protopet_victory_condition(self) -> Any:
+        location_name = Locations.YEEDIL_DEFEAT_MUTATED_PROTOPET.name
+        boss_location = self.multiworld.get_location(location_name, self.player)
+        boss_location.place_locked_item(self.create_event(location_name))
+        return lambda state, p=self.player, ev=location_name: state.has(ev, p)
+
+    def get_all_platinum_bolts_victory_condition(self) -> Any:
+        return lambda state: state.has(Items.PLATINUM_BOLT.name, self.player, 40)
+
+    def get_all_weapons_victory_condition(self) -> Any:
+        return lambda state: all(
+            state.has(item.name, self.player) for item in Items.LV1_WEAPONS
+        )
+
+    def get_all_gadgets_victory_condition(self) -> Any:
+        return lambda state: all(
+            state.has(item.name, self.player) for item in Items.EQUIPMENT
+        )
+
     def set_rules(self) -> None:
-        boss_location = self.multiworld.get_location(Locations.YEEDIL_DEFEAT_MUTATED_PROTOPET.name, self.player)
-        boss_location.place_locked_item(self.create_event("Victory"))
-        self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
+        goals_options = self.options.victory_conditions
+
+        goals = []
+
+        if VictoryConditions.defeat_protopet in goals_options:
+            goals.append(self.get_mutated_protopet_victory_condition())
+        if VictoryConditions.get_all_platinum_bolts in goals_options:
+            goals.append(self.get_all_platinum_bolts_victory_condition())
+        if VictoryConditions.get_all_weapons in goals_options:
+            goals.append(self.get_all_weapons_victory_condition())
+        if VictoryConditions.get_all_gadgets in goals_options:
+            goals.append(self.get_all_gadgets_victory_condition())
+
+        if not goals:
+            boss_location = self.multiworld.get_location(Locations.YEEDIL_DEFEAT_MUTATED_PROTOPET.name, self.player)
+            boss_location.place_locked_item(self.create_event("Victory"))
+            self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
+        else:
+            self.multiworld.completion_condition[self.player] = lambda state: all(
+                check(state) for check in goals
+            )
 
     def generate_output(self, output_directory: str) -> None:
         aprac2 = Rac2ProcedurePatch(player=self.player, player_name=self.multiworld.get_player_name(self.player))

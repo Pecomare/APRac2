@@ -5,7 +5,7 @@ from BaseClasses import ItemClassification, Item
 from .data import Items, Locations
 from .data.Items import CoordData, EquipmentData, ProgressiveUpgradeData, ItemData
 from .Logic import GLITCH_LOGIC_HARD
-from .Rac2Options import StartingWeapons, Rac2Options
+from .Rac2Options import StartingWeapons, Rac2Options, VictoryConditions
 
 if TYPE_CHECKING:
     from . import Rac2World
@@ -14,6 +14,12 @@ if TYPE_CHECKING:
 def get_classification(item: ItemData, options: Rac2Options = None) -> ItemClassification:
     if options is not None:
         if options.glitch_logic_difficulty >= GLITCH_LOGIC_HARD and item == Items.CHARGE_BOOTS:
+            return ItemClassification.progression
+        if VictoryConditions.get_all_platinum_bolts in options.victory_conditions and item == Items.PLATINUM_BOLT:
+            return ItemClassification.progression
+        if VictoryConditions.get_all_weapons in options.victory_conditions and item in Items.LV1_WEAPONS:
+            return ItemClassification.progression
+        if VictoryConditions.get_all_gadgets in options.victory_conditions and item in Items.EQUIPMENT:
             return ItemClassification.progression
     if item in Items.COORDS:
         return ItemClassification.progression
@@ -138,7 +144,11 @@ def create_equipment(world: "Rac2World") -> list["Item"]:
 def create_collectables(world: "Rac2World") -> list["Item"]:
     collectable_items: list["Item"] = []
 
-    for _ in range(20):
+    platinum_bolt_count = 20
+
+    if VictoryConditions.get_all_platinum_bolts in world.options.victory_conditions:
+        platinum_bolt_count = 40
+    for _ in range(platinum_bolt_count):
         collectable_items.append(world.create_item(Items.PLATINUM_BOLT.name))
 
     precollected_nanotech_boosts: int = len([

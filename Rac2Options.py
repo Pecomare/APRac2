@@ -6,6 +6,7 @@ from Options import (
     DefaultOnToggle,
     Toggle,
     Range,
+    OptionSet,
 )
 from dataclasses import dataclass
 
@@ -118,6 +119,28 @@ class GlitchLogicDifficulty(Choice):
     default = 0
 
 
+class VictoryConditions(OptionSet):
+    """Determines the objectives of the run.
+    The list of objectives is as follows:
+    - Defeat the Mutated Protopet
+    - Get all Platinum Bolts
+    - Get all Weapons
+    - Get all Gadgets
+    Note: if the list is empty, the objective will default to "Defeat the Mutated Protopet"."""
+    display_name = "Victory Conditions"
+    defeat_protopet = "Defeat the Mutated Protopet"
+    get_all_platinum_bolts = "Get all Platinum Bolts"
+    get_all_weapons = "Get all Weapons"
+    get_all_gadgets = "Get all Gadgets"
+    valid_keys = {
+        defeat_protopet,
+        get_all_platinum_bolts,
+        get_all_weapons,
+        get_all_gadgets,
+    }
+    default = { defeat_protopet }
+
+
 @dataclass
 class Rac2Options(PerGameCommonOptions):
     start_inventory_from_pool: StartInventoryPool
@@ -136,3 +159,4 @@ class Rac2Options(PerGameCommonOptions):
     extra_spaceship_challenge_locations: ExtraSpaceshipChallengeLocations
     extend_weapon_progression: ExtendWeaponProgression
     glitch_logic_difficulty: GlitchLogicDifficulty
+    victory_conditions: VictoryConditions
