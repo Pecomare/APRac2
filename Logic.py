@@ -136,8 +136,16 @@ def oozla_swamp_ruins_pb_rule(state: CollectionState, player: int) -> bool:
 
 
 def oozla_swamp_monster_ii_rule(state: CollectionState, player: int) -> bool:
-    return (can_dynamo(state, player)
-            and can_gravity(state, player))
+    if (can_dynamo(state, player)
+            and can_gravity(state, player)):
+        return True
+
+    options = get_options(state, player)
+
+    if options.glitch_logic_difficulty >= GLITCH_LOGIC_MEDIUM:
+        return can_gravity(state, player)
+
+    return False
 
 
 def maktar_photo_booth_rule(state: CollectionState, player: int) -> bool:
