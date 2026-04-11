@@ -109,6 +109,18 @@ Ratchet & Clank 2:
   # Can be disabled with value disabled.
   first_person_mode_glitch_in_logic: disabled
 
+  # Determines the objectives of the run.
+  # The list of objectives is as follows:
+  #    - Defeat the Mutated Protopet
+  #    - Get all Platinum Bolts
+  #    - Get all Weapons
+  #    - Get all Gadgets
+  # Note: if the list is empty, the objective will default to "Defeat the Mutated Protopet".
+  victory_conditions:
+    [
+      "Defeat the Mutated Protopet"
+    ]
+
   # Item & Location Options
   local_items:
     # Forces these items to be in their native world.
