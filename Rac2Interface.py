@@ -595,6 +595,8 @@ class Rac2Interface:
 
     def get_alive(self) -> bool:
         planet = self.get_current_planet()
+        if planet is None:
+            return True
         if planet in [Rac2Planet.Wupash_Nebula, Rac2Planet.Feltzin_System, Rac2Planet.Hrugis_Cloud, Rac2Planet.Gorn]:
             return self.pcsx2_interface.read_int8(self.addresses.planet[planet].camara_state) != 6
         elif planet in [Rac2Planet.Dobbo_Orbit, Rac2Planet.Damosel_Orbit]:
