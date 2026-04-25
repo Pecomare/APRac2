@@ -144,6 +144,7 @@ class Rac2World(World):
             "randomize_megacorp_vendor",
             "randomize_gadgetron_vendor",
             "extend_weapon_progression",
+            "glitch_logic_difficulty",
         )
 
     # UT Yaml-less flag
