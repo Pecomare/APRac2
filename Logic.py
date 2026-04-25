@@ -817,10 +817,8 @@ def damosel_frozen_mountain_pb_rule(state: CollectionState, player: int) -> bool
     options = get_options(state, player)
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_HARD:
-        # charge over the pit and double jumps
-        return ((can_charge(state, player)
-                or can_swingshot(state, player))
-            and can_thermanate(state, player)
+        # grind on train rails and wrench jump
+        return (can_charge(state, player)
             and can_grind(state, player))
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_MEDIUM:
