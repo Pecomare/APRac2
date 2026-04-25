@@ -1,3 +1,4 @@
+from Logic import GLITCH_LOGIC_EXPERT, GLITCH_LOGIC_MEDIUM
 from . import Locations
 from .Rac2Interface import Rac2Planet, Rac2Interface, PauseState, Vendor, MissingAddressError
 from .TextManager import *
@@ -59,22 +60,35 @@ def init(ctx: 'Rac2Context'):
             ctx.game_interface.pcsx2_interface.write_int8(addr, value | bitmask)
 
     # TODO: Make these warnings better
+    logic_difficulty = ctx.slot_data.get("logic_difficulty")
     unstuck_message: str = (
         "It appears that you don't have the required equipment to escape this area.\1\1"
         "Select Go to Ship Shack from the Special menu to fly back to the \12Ship Shack\10."
     )
+    should_display_message = False
+
     if ctx.current_planet == Rac2Planet.Tabora:
+        should_display_message = True
         has_heli_pack = ctx.game_interface.count_inventory_item(Items.HELI_PACK) > 0
         has_swingshot = ctx.game_interface.count_inventory_item(Items.SWINGSHOT) > 0
-        if not (has_heli_pack and has_swingshot):
-            ctx.notification_manager.queue_notification(unstuck_message, 5.0)
+        has_charge_boots = ctx.game_interface.count_inventory_item(Items.CHARGE_BOOTS) > 0
+        if logic_difficulty == GLITCH_LOGIC_EXPERT and has_swingshot:
+            should_display_message = False
+        if logic_difficulty >= GLITCH_LOGIC_MEDIUM and has_charge_boots:
+            should_display_message = False
+        if has_heli_pack and has_swingshot:
+            should_display_message = False
 
     if ctx.current_planet == Rac2Planet.Aranos_Prison:
+        should_display_message = True
         has_gravity_boots = ctx.game_interface.count_inventory_item(Items.GRAVITY_BOOTS) > 0
         has_levitator = ctx.game_interface.count_inventory_item(Items.LEVITATOR) > 0
         has_infiltrator = ctx.game_interface.count_inventory_item(Items.INFILTRATOR) > 0
-        if not (has_gravity_boots and has_levitator and has_infiltrator):
-            ctx.notification_manager.queue_notification(unstuck_message, 5.0)
+        if has_gravity_boots and has_levitator and has_infiltrator:
+            should_display_message = False
+
+    if should_display_message:
+        ctx.notification_manager.queue_notification(unstuck_message, 5.0)
 
 
 def handle_specific_weapon_xp(ctx: 'Rac2Context'):
