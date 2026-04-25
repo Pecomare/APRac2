@@ -651,7 +651,7 @@ def aranos_under_ship_pb_rule(state: CollectionState, player: int) -> bool:
     options = get_options(state, player)
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_MEDIUM:
-        # charge and hold at the right angle
+        # wrench jump
         return (can_gravity(state, player)
                 and can_charge(state, player))
 
