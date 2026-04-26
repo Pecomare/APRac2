@@ -123,7 +123,8 @@ class Rac2World(World):
                     self.options.weapon_xp_multiplier.value = slot_data["weapon_xp_multiplier"]
                     self.options.extra_spaceship_challenge_locations.value = slot_data["extra_spaceship_challenge_locations"]
                     self.options.extend_weapon_progression.value = slot_data["extend_weapon_progression"]
-                    self.options.first_person_mode_glitch_in_logic.value = slot_data["first_person_mode_glitch_in_logic"]
+                    self.options.glitch_logic_difficulty.value = slot_data["glitch_logic_difficulty"]
+                    self.options.victory_conditions.value = slot_data["victory_conditions"]
             return
 
     def get_filler_item_name(self) -> str:
@@ -233,18 +234,8 @@ class Rac2World(World):
             "extra_spaceship_challenge_locations",
             "extend_weapon_progression",
             "glitch_logic_difficulty",
+            "victory_conditions"
         )
-
-    # UT Yaml-less flag
-    ut_can_gen_without_yaml = True
-
-    def generate_early(self) -> None:
-        if hasattr(self.multiworld, "re_gen_passthrough"):
-            if self.game in self.multiworld.re_gen_passthrough:
-                for key, val in self.multiworld.re_gen_passthrough[self.game].items():
-                    opt = getattr(self.options, key, None)
-                    if opt and hasattr(opt, "value"):
-                        opt.value = val
 
     def fill_slot_data(self) -> Mapping[str, Any]:
         slot_data = self.get_options_as_dict()
