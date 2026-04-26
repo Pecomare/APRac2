@@ -1,4 +1,4 @@
-from Logic import GLITCH_LOGIC_EXPERT, GLITCH_LOGIC_MEDIUM
+from .Logic import GLITCH_LOGIC_EXPERT, GLITCH_LOGIC_MEDIUM
 from . import Locations
 from .Rac2Interface import Rac2Planet, Rac2Interface, PauseState, Vendor, MissingAddressError
 from .TextManager import *
