@@ -13,7 +13,7 @@ import errno
 import tkinter as tk
 from tkinter import filedialog
 
-from CommonClient import CommonContext, get_base_parser, logger, server_loop, gui_enabled
+from CommonClient import get_base_parser, logger, server_loop, gui_enabled
 from NetUtils import ClientStatus
 import Utils
 from settings import get_settings

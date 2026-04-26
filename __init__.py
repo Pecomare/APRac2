@@ -123,7 +123,8 @@ class Rac2World(World):
                     self.options.weapon_xp_multiplier.value = slot_data["weapon_xp_multiplier"]
                     self.options.extra_spaceship_challenge_locations.value = slot_data["extra_spaceship_challenge_locations"]
                     self.options.extend_weapon_progression.value = slot_data["extend_weapon_progression"]
-                    self.options.first_person_mode_glitch_in_logic.value = slot_data["first_person_mode_glitch_in_logic"]
+                    self.options.glitch_logic_difficulty.value = slot_data["glitch_logic_difficulty"]
+                    self.options.victory_conditions.value = slot_data["victory_conditions"]
             return
 
     def get_filler_item_name(self) -> str:
@@ -233,6 +234,7 @@ class Rac2World(World):
             "extra_spaceship_challenge_locations",
             "extend_weapon_progression",
             "glitch_logic_difficulty",
+            "victory_conditions"
         )
 
     # UT Yaml-less flag
