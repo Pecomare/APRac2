@@ -7,6 +7,7 @@ from Options import (
     Toggle,
     Range,
     OptionSet,
+    ItemSet,
 )
 from dataclasses import dataclass
 
@@ -141,6 +142,35 @@ class VictoryConditions(OptionSet):
     default = { defeat_protopet }
 
 
+class StartableCoords(ItemSet):
+    """List of coordinates you can start with.
+    You will get 3 out of those.
+    Note: if the combination of this list and your starting inventory leads to fewer than 3 coordinates, the list will default to Oozla, Maktar Nebula, Endako, Feltzin System, Notak and Todano."""
+    display_name = "Starting Coordinates Pool"
+    valid_keys = {
+        "Oozla Coordinates",
+        "Maktar Nebula Coordinates",
+        "Endako Coordinates",
+        "Barlow Coordinates",
+        "Feltzin System Coordinates",
+        "Notak Coordinates",
+        "Siberius Coordinates",
+        "Tabora Coordinates",
+        "Dobbo Coordinates",
+        "Hrugis Cloud Coordinates",
+        "Joba Coordinates",
+        "Todano Coordinates",
+        "Boldan Coordinates",
+        "Aranos Prison Coordinates",
+        "Gorn Coordinates",
+        "Snivelak Coordinates",
+        "Smolg Coordinates",
+        "Damosel Coordinates",
+        "Grelbin Coordinates",
+    }
+    default = { "Oozla Coordinates", "Maktar Nebula Coordinates", "Endako Coordinates", "Feltzin System Coordinates", "Notak Coordinates", "Todano Coordinates" }
+
+
 @dataclass
 class Rac2Options(PerGameCommonOptions):
     start_inventory_from_pool: StartInventoryPool
@@ -160,3 +190,4 @@ class Rac2Options(PerGameCommonOptions):
     extend_weapon_progression: ExtendWeaponProgression
     glitch_logic_difficulty: GlitchLogicDifficulty
     victory_conditions: VictoryConditions
+    startable_coords: StartableCoords

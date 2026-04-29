@@ -121,6 +121,20 @@ Ratchet & Clank 2:
       "Defeat the Mutated Protopet"
     ]
 
+  # List of coordinates you can start with.
+  # You will get 3 out of those.
+  # Note: if the combination of this list and your starting inventory leads to fewer than 3 coordinates,
+  # the list will default to Oozla, Maktar Nebula, Endako, Feltzin System, Notak and Todano.
+  startable_coords:
+    [
+      "Oozla Coordinates",
+      "Maktar Nebula Coordinates",
+      "Endako Coordinates",
+      "Feltzin System Coordinates",
+      "Notak Coordinates",
+      "Todano Coordinates"
+    ]
+
   # Item & Location Options
   local_items:
     # Forces these items to be in their native world.
