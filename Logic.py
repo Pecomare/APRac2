@@ -276,13 +276,15 @@ def notak_timed_dynamo_rule(state: CollectionState, player: int) -> bool:
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_HARD:
         # wall jump in the thermanator room and decoy or turret clip
-        return (can_thermanate(state, player)
-                and can_clip(state, player))
+        if (can_thermanate(state, player)
+                and can_clip(state, player)):
+            return True
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_MEDIUM:
         # wall jump in the thermanator room
-        return (can_thermanate(state, player)
-                and can_dynamo(state, player))
+        if (can_thermanate(state, player)
+                and can_dynamo(state, player)):
+            return True
 
     return False
 
@@ -337,7 +339,8 @@ def tabora_meet_angela_rule(state: CollectionState, player: int) -> bool:
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_MEDIUM:
         # hold charge boots
-        return can_charge(state, player)
+        if can_charge(state, player):
+            return True
 
     return False
 
@@ -352,13 +355,13 @@ def tabora_underground_mines_end_rule(state: CollectionState, player: int) -> bo
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_EXPERT:
         # same as meet angela + thermanator
-        return (can_swingshot(state, player)
-                and can_thermanate(state, player))
+        if can_swingshot(state, player) and can_thermanate(state, player):
+            return True
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_MEDIUM:
         # same as meet angela + thermanator
-        return (can_charge(state, player)
-                and can_thermanate(state, player))
+        if can_charge(state, player) and can_thermanate(state, player):
+            return True
 
     return False
 
@@ -373,16 +376,16 @@ def tabora_underground_mines_pb_rule(state: CollectionState, player: int) -> boo
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_EXPERT:
         # same as meet angela + thermanator
-        return (can_swingshot(state, player)
-                and can_thermanate(state, player))
+        if can_swingshot(state, player) and can_thermanate(state, player):
+            return True
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_MEDIUM:
         # long jump above water and high-jump with heli to ledge grab
-        # or thermanator and sideflip hyperstrike
-        return ((can_heli(state, player)
-                and can_swingshot(state, player))
-            or (can_charge(state, player)
-                and can_thermanate(state, player)))
+        if can_heli(state, player) and can_swingshot(state, player):
+            return True
+        # thermanator and sideflip hyperstrike
+        if can_charge(state, player) and can_thermanate(state, player):
+            return True
 
     return False
 
@@ -398,15 +401,17 @@ def tabora_canyon_glide_pb_rule(state: CollectionState, player: int) -> bool:
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_EXPERT:
         # same as meet angela + thermanator + glider
-        return (can_swingshot(state, player)
+        if (can_swingshot(state, player)
                 and can_thermanate(state, player)
-                and can_glide(state, player))
+                and can_glide(state, player)):
+            return True
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_MEDIUM:
         # same as meet angela + thermanator + glider
-        return (can_charge(state, player)
+        if (can_charge(state, player)
                 and can_thermanate(state, player)
-                and can_glide(state, player))
+                and can_glide(state, player)):
+            return True
 
     return False
 
@@ -564,13 +569,15 @@ def todano_search_rocket_silo_rule(state: CollectionState, player: int) -> bool:
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_HARD:
         # clip through electrolyzer barrier and tight hyperstrike
-        return (can_electrolyze(state, player)
-                and can_clip(state, player))
+        if (can_electrolyze(state, player)
+                and can_clip(state, player)):
+            return True
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_MEDIUM:
         # tight hyperstrike
-        return (can_electrolyze(state, player)
-                and can_infiltrate(state, player))
+        if (can_electrolyze(state, player)
+                and can_infiltrate(state, player)):
+            return True
 
     return False
 
@@ -741,16 +748,18 @@ def smolg_distribution_facility_end_rule(state: CollectionState, player: int) ->
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_HARD:
         # double jumps and walk on grind section
-        return (can_dynamo(state, player)
+        if (can_dynamo(state, player)
                 and can_electrolyze(state, player)
-                and can_infiltrate(state, player))
+                and can_infiltrate(state, player)):
+            return True
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_MEDIUM:
         # double jumps
-        return (can_dynamo(state, player)
+        if (can_dynamo(state, player)
                 and can_electrolyze(state, player)
                 and can_grind(state, player)
-                and can_infiltrate(state, player))
+                and can_infiltrate(state, player)):
+            return True
 
     return False
 
@@ -825,14 +834,16 @@ def damosel_frozen_mountain_pb_rule(state: CollectionState, player: int) -> bool
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_HARD:
         # grind on train rails and wrench jump
-        return (can_charge(state, player)
-            and can_grind(state, player))
+        if (can_charge(state, player)
+                and can_grind(state, player)):
+            return True
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_MEDIUM:
         # double jumps
-        return (can_swingshot(state, player)
+        if (can_swingshot(state, player)
                 and can_thermanate(state, player)
-                and can_grind(state, player))
+                and can_grind(state, player)):
+            return True
 
     return False
 
@@ -846,17 +857,17 @@ def damosel_pyramid_pb_rule(state: CollectionState, player: int) -> bool:
     options = get_options(state, player)
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_HARD:
-        if not can_hypnotize(state, player):
-            return False
-
-        # charge over the pit and double jumps
-        return (can_charge(state, player)
-                or can_swingshot(state, player))
+        if can_hypnotize(state, player):
+            # charge over the pit and double jumps
+            if (can_charge(state, player)
+                    or can_swingshot(state, player)):
+                return True
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_MEDIUM:
         # double jumps
-        return (can_swingshot(state, player)
-                and can_hypnotize(state, player))
+        if (can_swingshot(state, player)
+                and can_hypnotize(state, player)):
+            return True
 
     return False
 
@@ -905,26 +916,29 @@ def yeedil_defeat_mutated_protopet_rule(state: CollectionState, player: int) -> 
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_EXPERT:
         # charge cancels + wrench jumps + clip + hyperstrike
-        return (can_charge(state, player)
+        if (can_charge(state, player)
                 and state.has(Items.HOVERBOMB_GUN.name, player)
                 and can_clip(state, player)
-                and can_electrolyze(state, player))
+                and can_electrolyze(state, player)):
+            return True
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_HARD:
         # clip + hyperstrike
-        return (can_hypnotize(state, player)
+        if (can_hypnotize(state, player)
                 and can_swingshot(state, player)
                 and can_clip(state, player)
                 and can_dynamo(state, player)
-                and can_electrolyze(state, player))
+                and can_electrolyze(state, player)):
+            return True
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_MEDIUM:
         # hyperstrike
-        return (can_hypnotize(state, player)
+        if (can_hypnotize(state, player)
                 and can_swingshot(state, player)
                 and can_infiltrate(state, player)
                 and can_dynamo(state, player)
-                and can_electrolyze(state, player))
+                and can_electrolyze(state, player)):
+            return True
 
     return False
 
@@ -945,31 +959,34 @@ def yeedil_tractor_pillar_pb_rule(state: CollectionState, player: int) -> bool:
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_EXPERT:
         # charge cancels + wrench jumps + clip + hyperstrike
-        return (can_charge(state, player)
+        if (can_charge(state, player)
                 and state.has(Items.HOVERBOMB_GUN.name, player)
                 and can_clip(state, player)
                 and can_electrolyze(state, player)
                 and can_tractor(state, player)
-                and can_grind(state, player))
+                and can_grind(state, player)):
+            return True
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_HARD:
         # clip + hyperstrike
-        return (can_hypnotize(state, player)
+        if (can_hypnotize(state, player)
                 and can_swingshot(state, player)
                 and can_clip(state, player)
                 and can_dynamo(state, player)
                 and can_electrolyze(state, player)
                 and can_tractor(state, player)
-                and can_grind(state, player))
+                and can_grind(state, player)):
+            return True
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_MEDIUM:
         # hyperstrike
-        return (can_hypnotize(state, player)
+        if (can_hypnotize(state, player)
                 and can_swingshot(state, player)
                 and can_infiltrate(state, player)
                 and can_dynamo(state, player)
                 and can_electrolyze(state, player)
                 and can_tractor(state, player)
-                and can_grind(state, player))
+                and can_grind(state, player)):
+            return True
 
     return False
