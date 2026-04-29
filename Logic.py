@@ -31,6 +31,10 @@ def can_thruster(state: CollectionState, player: int) -> bool:
     return state.has(Items.THRUSTER_PACK.name, player)
 
 
+def can_pack_switch(state: CollectionState, player: int) -> bool:
+    return can_heli(state, player) and can_thruster(state, player)
+
+
 def can_grind(state: CollectionState, player: int) -> bool:
     return state.has(Items.GRIND_BOOTS.name, player)
 
@@ -157,8 +161,7 @@ def maktar_photo_booth_rule(state: CollectionState, player: int) -> bool:
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_HARD:
         # wrench jump or pack switch
         return (can_charge(state, player)
-                or (can_heli(state, player)
-                    and can_thruster(state, player)))
+                or can_pack_switch(state, player))
 
     return False
 
@@ -425,9 +428,10 @@ def dobbo_defeat_thug_leader_rule(state: CollectionState, player: int) -> bool:
     options = get_options(state, player)
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_HARD:
-        # wrench jump above dynamo platforms
+        # wrench jump above dynamo platforms or pack-switch
         return (can_swingshot(state, player)
-                and can_charge(state, player))
+                and (can_charge(state, player)
+                     or can_pack_switch(state, player)))
 
     return False
 
@@ -448,12 +452,14 @@ def dobbo_spiderbot_room_pb_rule(state: CollectionState, player: int) -> bool:
     options = get_options(state, player)
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_HARD:
-        # wrench jump above dynamo platforms and turret or decoy clip
-        return (can_swingshot(state, player)
-                and (can_dynamo(state, player)
-                     or can_charge(state, player))
-                and (can_spiderbot(state, player)
-                     or can_clip(state, player)))
+        if can_spiderbot(state, player) or can_clip(state, player):
+            if can_swingshot(state, player) and can_dynamo(state, player):
+                return True
+            # wrench jump above dynamo platforms
+            if can_swingshot(state, player) and can_charge(state, player):
+                return True
+            if can_pack_switch(state, player):
+                return True
 
     return False
 
