@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from BaseClasses import ItemClassification, Item
 from .data import Items, Locations
 from .data.Items import CoordData, EquipmentData, ProgressiveUpgradeData, ItemData
-from .Rac2Options import StartingWeapons
+from .Rac2Options import StartableCoords, StartingWeapons
 
 if TYPE_CHECKING:
     from . import Rac2World
@@ -56,7 +56,13 @@ def create_planets(world: "Rac2World") -> list["Item"]:
     # If the player manually added any eligible coords to their starting inventory, those will get used first.
     # If there are still less than 3, pick the rest of the starting coords randomly from the eligible coords.
     starting_coords: list[CoordData] = [coord for coord in coords_to_add if coord.item_id in precollected_ids]
-    startable_coords: list[CoordData] = [coord for coord in Items.STARTABLE_COORDS if coord not in starting_coords]
+
+    startable_coords_option: list[str] = world.options.startable_coords.value
+    if len(starting_coords) + len(startable_coords_option) < 3:
+        startable_coords_option = StartableCoords.default
+    eligible_coords: list[CoordData] = [c for c in Items.COORDS if c.name in startable_coords_option]
+    startable_coords: list[CoordData] = [coord for coord in eligible_coords if coord not in starting_coords]
+
     world.multiworld.random.shuffle(startable_coords)
     for coord in startable_coords[:max(3 - len(starting_coords), 0)]:
         starting_coords.append(coord)
