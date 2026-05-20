@@ -91,6 +91,7 @@ def has_hypnomatic_parts(state: CollectionState, player: int) -> bool:
     return state.has(Items.HYPNOMATIC_PART.name, player, 3)
 
 
+GLITCH_LOGIC_BEGINNER = 0
 GLITCH_LOGIC_MEDIUM = 1
 GLITCH_LOGIC_HARD = 2
 GLITCH_LOGIC_EXPERT = 3
