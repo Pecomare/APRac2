@@ -1,7 +1,7 @@
 import json
 import shutil
 import zipfile
-from typing import Optional, cast, Dict, Any
+from typing import Optional, cast, Dict, Any, List
 import asyncio
 import multiprocessing
 import os
@@ -18,6 +18,7 @@ from NetUtils import ClientStatus
 import Utils
 from settings import get_settings
 from .data.Planets import get_all_active_locations
+from .data import Items
 from . import Rac2Settings
 from .Container import Rac2ProcedurePatch
 from .ClientCheckLocations import handle_checked_location
@@ -25,6 +26,7 @@ from .Callbacks import update, init
 from .ClientReceiveItems import handle_received_items
 from .NotificationManager import NotificationManager
 from .Rac2Interface import HUD_MESSAGE_DURATION, ConnectionState, create_pine_interface, Rac2Interface, Rac2Planet
+from .Rac2Options import VictoryConditions
 from configparser import ConfigParser
 from . import get_world_version
 
@@ -283,7 +285,7 @@ class Rac2CommandProcessor(ClientCommandProcessor):
             try:
                 await patch_and_run_game(file_path)
                 self.ctx.auth = get_name_from_aprac2(file_path)
-                
+
                 connect_address = get_connection_info_from_aprac2(file_path)
                 if connect_address:
                     logger.info(f"Auto-connecting to {connect_address}")
@@ -314,6 +316,7 @@ class Rac2Context(CommonContext):
     death_link_enabled = False
     queued_deaths: int = 0
     previous_decoy_glove_ammo: int = 0
+    goals: List[Any] = []
 
     def __init__(self, server_address, password):
         super().__init__(server_address, password)
@@ -468,10 +471,8 @@ async def pcsx2_sync_task(ctx: Rac2Context):
 
 
 async def handle_check_goal_complete(ctx: Rac2Context):
-    if ctx.current_planet is Rac2Planet.Yeedil:
-        moby = ctx.game_interface.get_moby(197)
-        if moby is not None and ctx.game_interface.get_moby(197).state == 0x11:
-            await ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])
+    if all(check(ctx) for check in ctx.goals):
+        await ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])
 
 
 async def handle_deathlink(ctx: Rac2Context):
@@ -488,7 +489,59 @@ async def handle_deathlink(ctx: Rac2Context):
             ctx.is_pending_death_link_reset = True
 
 
+def get_mutated_protopet_victory_condition() -> Any:
+    return lambda ctx: (
+        ctx.current_planet is Rac2Planet.Yeedil and
+        ctx.game_interface.get_moby(197) is not None and
+        ctx.game_interface.get_moby(197).state == 0x11)
+
+
+def get_all_platinum_bolts_victory_condition() -> Any:
+    return lambda ctx: ctx.game_interface.get_current_inventory()[Items.PLATINUM_BOLT.name] >= 40
+
+
+def get_all_weapons_victory_condition() -> Any:
+    return lambda ctx: all(
+        ctx.game_interface.get_current_inventory()[item.name] > 0 for item in Items.LV1_WEAPONS
+    )
+
+
+def get_all_gadgets_victory_condition() -> Any:
+    return lambda ctx: all(
+        ctx.game_interface.get_current_inventory()[item.name] > 0 for item in Items.EQUIPMENT
+    )
+
+
+def initialize_goals(ctx: Rac2Context):
+    if ctx.slot_data is None:
+        return
+
+    goals_options = ctx.slot_data.get("victory_conditions", None)
+
+    if goals_options is None:
+        ctx.game_interface.logger.info("Goal list should not be None (Rac2Client.py). Adding Protopet as objective.")
+        ctx.goals.append(get_mutated_protopet_victory_condition())
+        return
+
+    if len(goals_options) is 0:
+        ctx.game_interface.logger.info("Goal list is empty. Adding Protopet as objective.")
+        ctx.goals.append(get_mutated_protopet_victory_condition())
+        return
+
+    if VictoryConditions.defeat_protopet in goals_options:
+        ctx.goals.append(get_mutated_protopet_victory_condition())
+    if VictoryConditions.get_all_platinum_bolts in goals_options:
+        ctx.goals.append(get_all_platinum_bolts_victory_condition())
+    if VictoryConditions.get_all_weapons in goals_options:
+        ctx.goals.append(get_all_weapons_victory_condition())
+    if VictoryConditions.get_all_gadgets in goals_options:
+        ctx.goals.append(get_all_gadgets_victory_condition())
+
+
 async def _handle_game_ready(ctx: Rac2Context):
+    if len(ctx.goals) is 0:
+        initialize_goals(ctx)
+
     if ctx.is_loading:
         if not ctx.game_interface.is_loading():
             ctx.is_loading = False
@@ -646,13 +699,13 @@ def launch():
         args = parser.parse_args()
 
         connect_address = args.connect
-        
+
         # If no manual connect address, try to get from patch file
         if not connect_address and args.aprac2_file and os.path.isfile(args.aprac2_file):
             connect_address = get_connection_info_from_aprac2(args.aprac2_file)
             if connect_address:
                 logger.info(f"Auto-connect address found in patch: {connect_address}")
-        
+
         ctx = Rac2Context(connect_address, args.password)
 
         # Per UT docs: call ctx.run_generator() if UT was found
