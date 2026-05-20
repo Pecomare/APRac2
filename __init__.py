@@ -125,6 +125,7 @@ class Rac2World(World):
                     self.options.extend_weapon_progression.value = slot_data["extend_weapon_progression"]
                     self.options.glitch_logic_difficulty.value = slot_data["glitch_logic_difficulty"]
                     self.options.victory_conditions.value = slot_data["victory_conditions"]
+                    self.options.startable_coords.value = slot_data["startable_coords"]
             return
 
     def get_filler_item_name(self) -> str:
@@ -234,7 +235,8 @@ class Rac2World(World):
             "extra_spaceship_challenge_locations",
             "extend_weapon_progression",
             "glitch_logic_difficulty",
-            "victory_conditions"
+            "victory_conditions",
+            "startable_coords"
         )
 
     def fill_slot_data(self) -> Mapping[str, Any]:
