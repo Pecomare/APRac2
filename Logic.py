@@ -363,6 +363,14 @@ def tabora_underground_mines_end_rule(state: CollectionState, player: int) -> bo
         if can_charge(state, player) and can_thermanate(state, player):
             return True
 
+        # same as meet angela + long-jump once on balancing platforms + high-jump + climb on metallic structure on the right
+        if can_charge(state, player) and can_heli(state, player):
+            return True
+
+        # same as above
+        if can_swingshot(state, player) and can_heli(state, player):
+            return True
+
     return False
 
 
@@ -413,6 +421,18 @@ def tabora_canyon_glide_pb_rule(state: CollectionState, player: int) -> bool:
                 and can_glide(state, player)):
             return True
 
+        # same as meet angela + long-jump once on balancing platforms + high-jump + climb on metallic structure on the right + glider
+        if (can_charge(state, player)
+                and can_heli(state, player)
+                and can_glide(state, player)):
+            return True
+
+        # same as above
+        if (can_swingshot(state, player)
+                and can_heli(state, player)
+                and can_glide(state, player)):
+            return True
+
     return False
 
 
@@ -421,7 +441,17 @@ def tabora_northeast_desert_pb_rule(state: CollectionState, player: int) -> bool
 
 
 def tabora_canyon_glide_pillar_nt_rule(state: CollectionState, player: int) -> bool:
-    return tabora_canyon_glide_pb_rule(state, player)
+    if tabora_canyon_glide_pb_rule(state, player):
+        return True
+
+    options = get_options(state, player)
+
+    if options.glitch_logic_difficulty >= GLITCH_LOGIC_MEDIUM:
+        # TODO Allow this rule in beginner difficulty ?
+        if tabora_meet_angela_rule(state, player):
+            return True
+
+    return False
 
 
 def dobbo_defeat_thug_leader_rule(state: CollectionState, player: int) -> bool:
@@ -568,7 +598,7 @@ def todano_search_rocket_silo_rule(state: CollectionState, player: int) -> bool:
     options = get_options(state, player)
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_HARD:
-        # clip through electrolyzer barrier and tight hyperstrike
+        # clip through infiltrator barrier and tight hyperstrike
         if (can_electrolyze(state, player)
                 and can_clip(state, player)):
             return True
@@ -589,6 +619,7 @@ def todano_stuart_zurgo_trade_rule(state: CollectionState, player: int) -> bool:
 
 
 def todano_facility_interior_rule(state: CollectionState, player: int) -> bool:
+    # TODO Technically possible, but so many clips and need armor to tank the lasers. What to do ?
     return (can_electrolyze(state, player)
             and can_tractor(state, player))
 
@@ -606,6 +637,12 @@ def todano_spiderbot_conveyor_pb_rule(state: CollectionState, player: int) -> bo
         return True
 
     options = get_options(state, player)
+
+    if options.glitch_logic_difficulty >= GLITCH_LOGIC_EXPERT:
+        # clips galore
+        if (can_electrolyze(state, player)
+                and can_clip(state, player)):
+            return True
 
     if options.glitch_logic_difficulty >= GLITCH_LOGIC_HARD:
         # sideflip hyperstrike
@@ -658,18 +695,8 @@ def aranos_plumber_rule(state: CollectionState, player: int) -> bool:
 
 
 def aranos_under_ship_pb_rule(state: CollectionState, player: int) -> bool:
-    if (can_gravity(state, player)
-            and can_heli(state, player)):
-        return True
-
-    options = get_options(state, player)
-
-    if options.glitch_logic_difficulty >= GLITCH_LOGIC_MEDIUM:
-        # wrench jump
-        return (can_gravity(state, player)
-                and can_charge(state, player))
-
-    return False
+    return (can_gravity(state, player)
+            and can_heli(state, player))
 
 
 def aranos_omniwrench_12000_rule(state: CollectionState, player: int) -> bool:
@@ -708,16 +735,8 @@ def snivelak_dynamo_pb_rule(state: CollectionState, player: int) -> bool:
 
 def snivelak_swingshot_tower_nt_rule(state: CollectionState, player: int) -> bool:
     # TODO momentum conservation ?
-    if (can_swingshot(state, player)
-            and can_heli(state, player)):
-        return True
-
-    options = get_options(state, player)
-
-    if options.glitch_logic_difficulty >= GLITCH_LOGIC_HARD:
-        return can_swingshot(state, player)
-
-    return False
+    return (can_swingshot(state, player)
+            and can_heli(state, player))
 
 
 def smolg_balloon_transmission_rule(state: CollectionState, player: int) -> bool:
