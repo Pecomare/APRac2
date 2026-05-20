@@ -1,4 +1,4 @@
-from .Logic import GLITCH_LOGIC_EXPERT, GLITCH_LOGIC_MEDIUM
+from .Logic import GLITCH_LOGIC_EXPERT, GLITCH_LOGIC_MEDIUM, GLITCH_LOGIC_BEGINNER
 from . import Locations
 from .Rac2Interface import Rac2Planet, Rac2Interface, PauseState, Vendor, MissingAddressError
 from .TextManager import *
@@ -60,7 +60,7 @@ def init(ctx: 'Rac2Context'):
             ctx.game_interface.pcsx2_interface.write_int8(addr, value | bitmask)
 
     # TODO: Make these warnings better
-    logic_difficulty = ctx.slot_data.get("logic_difficulty")
+    logic_difficulty = ctx.slot_data.get("glitch_logic_difficulty", GLITCH_LOGIC_BEGINNER)
     unstuck_message: str = (
         "It appears that you don't have the required equipment to escape this area.\1\1"
         "Select Go to Ship Shack from the Special menu to fly back to the \12Ship Shack\10."
